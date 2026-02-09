@@ -1,15 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { CheckCircle, XCircle, Smartphone, ExternalLink } from 'lucide-react';
-
-const DEEP_LINK_BASE = 'vouchap://auth/confirm';
-
-function isMobile(): boolean {
-    if (typeof window === 'undefined') return false;
-    const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
-    return /android|ipad|iphone|ipod/i.test(ua);
-}
+import { CheckCircle, XCircle } from 'lucide-react';
 
 function getParamsFromUrl(): { accessToken?: string; refreshToken?: string; tokenHash?: string; type?: string } {
     if (typeof window === 'undefined') return {};
@@ -23,17 +15,13 @@ function getParamsFromUrl(): { accessToken?: string; refreshToken?: string; toke
     return { accessToken, refreshToken, tokenHash, type: type || undefined };
 }
 
-function buildDeepLinkUrl(): string {
-    const search = typeof window !== 'undefined' ? window.location.search : '';
-    const hash = typeof window !== 'undefined' ? window.location.hash : '';
-    const qs = (search ? search.slice(1) + '&' : '') + (hash ? hash.slice(1) : '');
-    return qs ? `${DEEP_LINK_BASE}?${qs}` : DEEP_LINK_BASE;
-}
-
+/**
+ * Platform auth confirm: only reached when user clicks "Go to Platform" / "Set password in browser"
+ * or "Continue in browser" from the website intermediate page. No device detection; just verify and redirect.
+ */
 const AuthConfirm = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const [status, setStatus] = useState<'loading' | 'mobile_choice' | 'success' | 'error'>('loading');
+    const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState('');
 
     const ensureUserRecord = useCallback(async (user: any) => {
@@ -71,7 +59,7 @@ const AuthConfirm = () => {
                 setStatus('success');
                 if (type === 'recovery') {
                     setMessage('Password reset verified! Redirecting to set new password...');
-                    setTimeout(() => navigate('/set-password'), 1500);
+                    setTimeout(() => navigate('/set-password', { replace: true }), 400);
                 } else if (type === 'email_change') {
                     setMessage('Email change confirmed! Your email has been updated.');
                     setTimeout(() => navigate('/profile'), 2000);
@@ -92,7 +80,20 @@ const AuthConfirm = () => {
                 setStatus('success');
                 if (type === 'recovery') {
                     setMessage('Password reset verified! Redirecting to set new password...');
-                    setTimeout(() => navigate('/set-password'), 1500);
+                    const waitForSession = async (attempts = 0): Promise<void> => {
+                        const max = 15;
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (session) {
+                            navigate('/set-password', { replace: true });
+                            return;
+                        }
+                        if (attempts < max) {
+                            setTimeout(() => waitForSession(attempts + 1), 200);
+                        } else {
+                            navigate('/set-password', { replace: true });
+                        }
+                    };
+                    setTimeout(() => waitForSession(), 300);
                 } else if (type === 'email_change') {
                     setMessage('Email change confirmed!');
                     setTimeout(() => navigate('/profile'), 2000);
@@ -125,25 +126,10 @@ const AuthConfirm = () => {
             return;
         }
 
-        if (isMobile()) {
-            setStatus('mobile_choice');
-            const deepLink = buildDeepLinkUrl();
-            window.location.href = deepLink;
-        } else {
-            processConfirm();
-        }
+        processConfirm();
     // Intentionally run once on mount; processConfirm is stable via useCallback.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    const handleContinueInBrowser = () => {
-        setStatus('loading');
-        processConfirm();
-    };
-
-    const handleOpenApp = () => {
-        window.location.href = buildDeepLinkUrl();
-    };
 
     const containerStyle: React.CSSProperties = {
         minHeight: '100vh',
@@ -162,88 +148,6 @@ const AuthConfirm = () => {
         textAlign: 'center',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
     };
-    const btnStyle: React.CSSProperties = {
-        width: '100%',
-        padding: '0.75rem 1rem',
-        marginTop: '0.5rem',
-        borderRadius: '0.75rem',
-        border: 'none',
-        fontSize: '0.9375rem',
-        fontWeight: 600,
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem',
-    };
-
-    if (status === 'mobile_choice') {
-        return (
-            <div style={containerStyle}>
-                <div style={cardStyle}>
-                    <Smartphone size={40} style={{ margin: '0 auto 1rem', color: '#7C3AED' }} />
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem', color: '#1f2937' }}>
-                        Open in App
-                    </h2>
-                    <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-                        If the app didn’t open, choose an option below.
-                    </p>
-                    <button
-                        type="button"
-                        onClick={handleOpenApp}
-                        style={{ ...btnStyle, background: '#7C3AED', color: 'white' }}
-                    >
-                        <Smartphone size={20} />
-                        Open App
-                    </button>
-                    <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '1rem', marginBottom: '0.25rem' }}>
-                        Don’t have the app?
-                    </p>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                        <a
-                            href="#"
-                            style={{
-                                ...btnStyle,
-                                background: '#000',
-                                color: 'white',
-                                textDecoration: 'none',
-                                width: 'auto',
-                                padding: '0.5rem 1rem',
-                            }}
-                        >
-                            App Store
-                        </a>
-                        <a
-                            href="#"
-                            style={{
-                                ...btnStyle,
-                                background: '#000',
-                                color: 'white',
-                                textDecoration: 'none',
-                                width: 'auto',
-                                padding: '0.5rem 1rem',
-                            }}
-                        >
-                            Google Play
-                        </a>
-                    </div>
-                    <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
-                        <p style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-                            Or complete in this browser
-                        </p>
-                        <button
-                            type="button"
-                            onClick={handleContinueInBrowser}
-                            style={{ ...btnStyle, background: '#f3f4f6', color: '#374151' }}
-                        >
-                            <ExternalLink size={18} />
-                            Continue in Browser
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div style={containerStyle}>

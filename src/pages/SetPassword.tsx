@@ -15,31 +15,46 @@ const SetPassword = () => {
     const [checkingAuth, setCheckingAuth] = useState(true);
 
     useEffect(() => {
-        checkAuth();
-    }, []);
+        let cancelled = false;
 
-    const checkAuth = async () => {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                // 等待一下，可能session还在设置中
-                setTimeout(async () => {
-                    const { data: { session: retrySession } } = await supabase.auth.getSession();
-                    if (!retrySession) {
-                        setError('Your password reset session has expired. Please request a new password reset link.');
-                        setTimeout(() => navigate('/reset-password'), 3000);
-                    } else {
-                        setCheckingAuth(false);
-                    }
-                }, 2000);
-            } else {
-                setCheckingAuth(false);
+        const resolveSession = (session: any) => {
+            if (!cancelled) setCheckingAuth(false);
+        };
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session) resolveSession(session);
+        });
+
+        const checkWithRetries = async (attempt = 0) => {
+            const delays = [0, 200, 500, 1000, 2000];
+            const idx = Math.min(attempt, delays.length - 1);
+            if (delays[idx] > 0) {
+                await new Promise((r) => setTimeout(r, delays[idx]));
             }
-        } catch (err) {
-            console.error('Error checking auth:', err);
-            setCheckingAuth(false);
-        }
-    };
+            if (cancelled) return;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                resolveSession(session);
+                return;
+            }
+            if (attempt < delays.length - 1) {
+                checkWithRetries(attempt + 1);
+            } else {
+                if (!cancelled) {
+                    setCheckingAuth(false);
+                    setError('Your password reset session has expired. Please request a new password reset link.');
+                    setTimeout(() => navigate('/reset-password'), 3000);
+                }
+            }
+        };
+
+        checkWithRetries(0);
+
+        return () => {
+            cancelled = true;
+            subscription.unsubscribe();
+        };
+    }, [navigate]);
 
     const handleSetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
