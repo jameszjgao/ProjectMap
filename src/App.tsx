@@ -64,9 +64,8 @@ function App() {
             <div className="app-container">
                 {session ? (
                     <div className="dashboard-layout">
-                        <Sidebar />
+                        <Sidebar user={session.user} />
                         <div className="main-content">
-                            <Header user={session.user} />
                             <div className="page-content">
                                 <Routes>
                                     <Route path="/" element={<Dashboard />} />

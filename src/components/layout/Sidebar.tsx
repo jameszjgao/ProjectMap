@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -5,14 +6,36 @@ import {
   ArrowUpCircle,
   PackageSearch,
   PackageCheck,
-  LogOut
+  LogOut,
+  User,
+  Building2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 import './Sidebar.css';
 
-const Sidebar = () => {
+interface SidebarProps {
+  user?: any;
+}
+
+const Sidebar = ({ user }: SidebarProps) => {
   const location = useLocation();
+  const [spaceName, setSpaceName] = useState('My Workspace');
+
+  useEffect(() => {
+    if (user?.user_metadata?.space_id) {
+      // Optimistically set if possible, or fetch
+      // Assuming metadata might have name, otherwise fetch
+      supabase
+        .from('spaces')
+        .select('name')
+        .eq('id', user.user_metadata.space_id)
+        .single()
+        .then(({ data }) => {
+          if (data?.name) setSpaceName(data.name);
+        });
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -28,9 +51,24 @@ const Sidebar = () => {
 
   return (
     <div className="sidebar">
-      <div className="sidebar-logo">
-        <div className="logo-icon">V</div>
-        <span>Vouchap</span>
+      <div className="sidebar-top">
+        <div className="sidebar-logo">
+          <div className="logo-icon">V</div>
+          <span>Vouchap</span>
+        </div>
+
+        {user && (
+          <div className="sidebar-user-info">
+            <div className="user-item">
+              <User size={14} className="user-icon" />
+              <span className="user-text" title={user.email}>{user.email}</span>
+            </div>
+            <div className="user-item">
+              <Building2 size={14} className="user-icon" />
+              <span className="user-text">{spaceName}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <nav className="sidebar-nav">

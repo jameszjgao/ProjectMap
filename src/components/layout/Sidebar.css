@@ -14,8 +14,42 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     padding-left: 0.5rem;
+}
+
+.sidebar-top {
+    margin-bottom: 2rem;
+}
+
+.sidebar-user-info {
+    padding: 0.75rem 1rem;
+    background-color: var(--color-input-bg);
+    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid var(--color-border);
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--color-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.user-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.user-icon {
+    color: var(--color-primary);
+    flex-shrink: 0;
 }
 
 .logo-icon {
