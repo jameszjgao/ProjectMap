@@ -18,7 +18,10 @@ const SetPassword = () => {
         let cancelled = false;
 
         const resolveSession = (session: any) => {
-            if (!cancelled) setCheckingAuth(false);
+            if (!cancelled) {
+                setError(null);
+                setCheckingAuth(false);
+            }
         };
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -26,7 +29,7 @@ const SetPassword = () => {
         });
 
         const checkWithRetries = async (attempt = 0) => {
-            const delays = [0, 200, 500, 1000, 2000];
+            const delays = [0, 300, 600, 1200, 2500];
             const idx = Math.min(attempt, delays.length - 1);
             if (delays[idx] > 0) {
                 await new Promise((r) => setTimeout(r, delays[idx]));

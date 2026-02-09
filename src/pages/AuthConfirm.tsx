@@ -56,11 +56,12 @@ const AuthConfirm = () => {
                 });
                 if (sessionError) throw sessionError;
                 if (sessionData?.user) await ensureUserRecord(sessionData.user);
-                setStatus('success');
                 if (type === 'recovery') {
-                    setMessage('Password reset verified! Redirecting to set new password...');
-                    setTimeout(() => navigate('/set-password', { replace: true }), 400);
-                } else if (type === 'email_change') {
+                    navigate('/set-password', { replace: true });
+                    return;
+                }
+                setStatus('success');
+                if (type === 'email_change') {
                     setMessage('Email change confirmed! Your email has been updated.');
                     setTimeout(() => navigate('/profile'), 2000);
                 } else {
@@ -77,24 +78,26 @@ const AuthConfirm = () => {
                 });
                 if (error) throw error;
                 if (data?.user) await ensureUserRecord(data.user);
-                setStatus('success');
                 if (type === 'recovery') {
-                    setMessage('Password reset verified! Redirecting to set new password...');
+                    // 直接跳改密页，不展示 success 卡避免闪现
                     const waitForSession = async (attempts = 0): Promise<void> => {
-                        const max = 15;
+                        const max = 20;
                         const { data: { session } } = await supabase.auth.getSession();
                         if (session) {
                             navigate('/set-password', { replace: true });
                             return;
                         }
                         if (attempts < max) {
-                            setTimeout(() => waitForSession(attempts + 1), 200);
+                            setTimeout(() => waitForSession(attempts + 1), 150);
                         } else {
                             navigate('/set-password', { replace: true });
                         }
                     };
-                    setTimeout(() => waitForSession(), 300);
-                } else if (type === 'email_change') {
+                    waitForSession();
+                    return;
+                }
+                setStatus('success');
+                if (type === 'email_change') {
                     setMessage('Email change confirmed!');
                     setTimeout(() => navigate('/profile'), 2000);
                 } else {
