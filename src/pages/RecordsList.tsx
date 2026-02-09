@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Plus, Search, Filter, MoreHorizontal,
-    ArrowRight, Calendar, Tag, CreditCard
+    Plus, Search, Filter,
+    Calendar
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import './RecordsList.css';
 
 interface RecordsListProps {
     type: 'expenditure' | 'income' | 'inbound' | 'outbound';
@@ -15,11 +16,11 @@ const RecordsList = ({ type }: RecordsListProps) => {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    const config = {
-        expenditure: { title: 'Expenditure Records', table: 'receipts', color: '#ec4899' },
-        income: { title: 'Income Records', table: 'invoices', color: '#6366f1' },
-        inbound: { title: 'Inbound Vouchers', table: 'inbound', color: '#22c55e' },
-        outbound: { title: 'Outbound Vouchers', table: 'outbound', color: '#eab308' },
+    const config: any = {
+        expenditure: { title: 'Expenditure Records', table: 'receipts' },
+        income: { title: 'Income Records', table: 'invoices' },
+        inbound: { title: 'Inbound Vouchers', table: 'inbound' },
+        outbound: { title: 'Outbound Vouchers', table: 'outbound' },
     };
 
     useEffect(() => {
@@ -38,13 +39,13 @@ const RecordsList = ({ type }: RecordsListProps) => {
     }, [type]);
 
     const getStatusBadge = (status: string) => {
-        const colors: any = {
-            pending: 'rgba(234, 179, 8, 0.1), #eab308',
-            confirmed: 'rgba(34, 197, 94, 0.1), #22c55e',
-            processing: 'rgba(99, 102, 241, 0.1), #6366f1',
-        };
-        const [bg, fg] = (colors[status] || 'rgba(148, 163, 184, 0.1), #94a3b8').split(', ');
-        return <span className="status-badge" style={{ backgroundColor: bg, color: fg }}>{status}</span>;
+        let className = 'badge badge-neutral';
+        switch (status) {
+            case 'confirmed': className = 'badge badge-success'; break;
+            case 'processing': className = 'badge badge-warning'; break;
+            case 'rejected': className = 'badge badge-danger'; break;
+        }
+        return <span className={className}>{status}</span>;
     };
 
     return (
@@ -54,192 +55,60 @@ const RecordsList = ({ type }: RecordsListProps) => {
                     <h1>{config[type].title}</h1>
                     <p>Showing latest {records.length} records</p>
                 </div>
-                <button className="btn-primary flex items-center gap-2">
+                <button className="btn btn-primary flex items-center gap-2" onClick={() => navigate(`/detail/${type}/new`)}>
                     <Plus size={20} /> Add New
                 </button>
             </div>
 
-            <div className="toolbar glass-card">
+            <div className="toolbar">
                 <div className="search-box">
-                    <Search size={18} />
-                    <input type="text" placeholder="Search by name, ID or date..." />
+                    <Search size={18} className="text-secondary" />
+                    <input type="text" placeholder="Search by name..." />
                 </div>
-                <div className="filter-actions">
-                    <button className="btn-secondary flex items-center gap-2">
-                        <Filter size={18} /> Filter
-                    </button>
-                </div>
+                <button className="btn btn-outline flex items-center gap-2">
+                    <Filter size={18} /> Filter
+                </button>
             </div>
 
-            <div className="table-container glass-card">
+            <div className="records-list-container">
+                <div className="records-header-row">
+                    <div>{type === 'expenditure' || type === 'inbound' ? 'Supplier / Store' : 'Customer'}</div>
+                    <div>Date</div>
+                    <div>Amount</div>
+                    <div>Status</div>
+                </div>
+
                 {loading ? (
-                    <div className="table-loading">Loading data...</div>
+                    <div className="loading-container" style={{ height: '300px' }}>
+                        <div className="loader" style={{ width: '32px', height: '32px' }}></div>
+                    </div>
                 ) : (
-                    <table className="records-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>{type === 'expenditure' || type === 'inbound' ? 'Supplier' : 'Customer'}</th>
-                                <th>Amount/Total</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {records.map((record) => (
-                                <tr key={record.id} onClick={() => navigate(`/detail/${type}/${record.id}`)}>
-                                    <td>
-                                        <div className="td-date">
-                                            <Calendar size={14} />
-                                            {record.date}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="td-name">
-                                            {record.store_name || record.customer_name || record.supplier_name || 'N/A'}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="td-amount">
-                                            <CreditCard size={14} />
-                                            ${Number(record.total_amount).toLocaleString()}
-                                        </div>
-                                    </td>
-                                    <td>{getStatusBadge(record.status)}</td>
-                                    <td>
-                                        <button className="icon-btn-sm">
-                                            <ArrowRight size={18} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {records.length === 0 && (
-                                <tr>
-                                    <td colSpan={5} className="empty-state">No records found.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                    <div className="records-list">
+                        {records.map((record) => (
+                            <div
+                                key={record.id}
+                                className="record-item"
+                                onClick={() => navigate(`/detail/${type}/${record.id}`)}
+                            >
+                                <div className="record-name">
+                                    {record.store_name || record.customer_name || record.supplier_name || 'N/A'}
+                                </div>
+                                <div className="record-date">
+                                    <Calendar size={14} />
+                                    {record.date ? new Date(record.date).toLocaleDateString() : '-'}
+                                </div>
+                                <div className="record-amount">
+                                    ${Number(record.total_amount || 0).toLocaleString()}
+                                </div>
+                                <div>{getStatusBadge(record.status)}</div>
+                            </div>
+                        ))}
+                        {records.length === 0 && (
+                            <div className="empty-state">No records found.</div>
+                        )}
+                    </div>
                 )}
             </div>
-
-            <style>{`
-        .records-page {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
-
-        .list-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .flex { display: flex; }
-        .items-center { align-items: center; }
-        .gap-2 { gap: 0.5rem; }
-
-        .toolbar {
-          display: flex;
-          justify-content: space-between;
-          padding: 1rem 1.5rem;
-        }
-
-        .search-box {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          background: rgba(15, 23, 42, 0.4);
-          padding: 0.5rem 1rem;
-          border-radius: 0.75rem;
-          width: 300px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .search-box input {
-          background: transparent;
-          border: none;
-          color: white;
-          outline: none;
-          width: 100%;
-        }
-
-        .table-container {
-          padding: 0;
-          overflow: hidden;
-        }
-
-        .records-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-        }
-
-        .records-table th {
-          padding: 1.25rem 1.5rem;
-          background: rgba(255, 255, 255, 0.02);
-          color: #94a3b8;
-          font-weight: 600;
-          font-size: 0.875rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .records-table td {
-          padding: 1.25rem 1.5rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.05);
-          color: #f1f5f9;
-          font-size: 0.9375rem;
-        }
-
-        .records-table tr {
-          cursor: pointer;
-          transition: background 0.2s ease;
-        }
-
-        .records-table tr:hover {
-          background: rgba(255, 255, 255, 0.03);
-        }
-
-        .td-date, .td-amount {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: #94a3b8;
-        }
-
-        .td-name {
-          font-weight: 500;
-        }
-
-        .status-badge {
-          padding: 0.25rem 0.75rem;
-          border-radius: 9999px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          text-transform: capitalize;
-        }
-
-        .icon-btn-sm {
-          background: transparent;
-          border: none;
-          color: #64748b;
-          cursor: pointer;
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 4rem;
-          color: #64748b;
-        }
-
-        .table-loading {
-          padding: 4rem;
-          text-align: center;
-          color: #94a3b8;
-        }
-      `}</style>
         </div>
     );
 };

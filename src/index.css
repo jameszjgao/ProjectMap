@@ -1,53 +1,192 @@
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* Brand Colors */
+  --color-primary: #6C5CE7;
+  --color-primary-light: #E8F4FD;
+  /* Selected bg */
+  --color-success: #00B894;
+  --color-danger: #E74C3C;
+  --color-warning: #FD79A8;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #0f172a;
+  /* Neutrals */
+  --color-bg: #ECEFF1;
+  /* App background */
+  --color-surface: #FFFFFF;
+  --color-border: #E9ECEF;
+  --color-text-main: #2D3436;
+  --color-text-secondary: #636E72;
+  --color-text-muted: #95A5A6;
+  --color-input-bg: #F8F9FA;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-#root {
-  width: 100%;
+  /* Layout */
+  --sidebar-width: 260px;
+  --header-height: 64px;
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* Premium scrollbar */
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Outfit', sans-serif;
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #CBD5E1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94A3B8;
 }
 
-/* Typography headers */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
-  color: #f8fafc;
+/* Utilities */
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.font-bold {
+  font-weight: 600;
+}
+
+.bg-surface {
+  background-color: var(--color-surface);
+}
+
+.card {
+  background-color: var(--color-surface);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-input-bg);
+  color: var(--color-text-main);
+}
+
+.btn-danger {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--color-danger);
+}
+
+.btn-danger:hover {
+  background-color: rgba(231, 76, 60, 0.2);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.625rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-input-bg);
+  color: var(--color-text-main);
+  background-color: var(--color-surface);
+  font-size: 0.9375rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface);
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badge-success {
+  background-color: rgba(0, 184, 148, 0.15);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background-color: rgba(253, 121, 168, 0.15);
+  color: var(--color-warning);
+}
+
+.badge-danger {
+  background-color: rgba(231, 76, 60, 0.15);
+  color: var(--color-danger);
+}
+
+.badge-neutral {
+  background-color: var(--color-border);
+  color: var(--color-text-secondary);
 }

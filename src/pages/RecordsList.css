@@ -1,0 +1,131 @@
+.records-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-surface);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+}
+
+.list-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    margin-bottom: 0.25rem;
+}
+
+.list-header p {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background-color: var(--color-surface);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    gap: 1rem;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: var(--color-input-bg);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    width: 320px;
+    border: 1px solid var(--color-border);
+    transition: border-color 0.2s;
+}
+
+.search-box:focus-within {
+    border-color: var(--color-primary);
+}
+
+.search-box input {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: var(--color-text-main);
+    outline: none;
+    width: 100%;
+    font-size: 0.9375rem;
+}
+
+.records-list-container {
+    background-color: var(--color-surface);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.records-header-row {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 100px;
+    padding: 1rem 1.5rem;
+    background-color: var(--color-input-bg);
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.record-item {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 100px;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.record-item:last-child {
+    border-bottom: none;
+}
+
+.record-item:hover {
+    background-color: var(--color-input-bg);
+}
+
+.record-name {
+    font-weight: 600;
+    color: var(--color-text-main);
+    font-size: 1rem;
+}
+
+.record-amount {
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 1rem;
+}
+
+.record-date {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem;
+    color: var(--color-text-muted);
+}

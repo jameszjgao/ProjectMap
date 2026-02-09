@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    LineChart, Line, AreaChart, Area
+    AreaChart, Area
 } from 'recharts';
 import {
     TrendingUp, TrendingDown, Package, CreditCard,
     ChevronUp, ChevronDown
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import './Dashboard.css';
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
@@ -68,7 +69,7 @@ const Dashboard = () => {
             </div>
 
             <div className="stats-grid">
-                <div className="stat-card glass-card">
+                <div className="stat-card">
                     <div className="stat-icon exp">
                         <TrendingDown size={24} />
                     </div>
@@ -81,7 +82,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="stat-card glass-card">
+                <div className="stat-card">
                     <div className="stat-icon inc">
                         <TrendingUp size={24} />
                     </div>
@@ -94,7 +95,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="stat-card glass-card">
+                <div className="stat-card">
                     <div className="stat-icon in">
                         <Package size={24} />
                     </div>
@@ -107,7 +108,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="stat-card glass-card">
+                <div className="stat-card">
                     <div className="stat-icon out">
                         <CreditCard size={24} />
                     </div>
@@ -122,7 +123,7 @@ const Dashboard = () => {
             </div>
 
             <div className="charts-grid">
-                <div className="chart-container glass-card main-chart">
+                <div className="chart-container main-chart">
                     <h3>Cash Flow Trend</h3>
                     <div className="chart-wrapper">
                         <ResponsiveContainer width="100%" height="100%">
@@ -137,126 +138,42 @@ const Dashboard = () => {
                                         <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                                <XAxis dataKey="name" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                                <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                                    itemStyle={{ color: '#f1f5f9' }}
+                                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                                    itemStyle={{ color: '#1e293b' }}
                                 />
-                                <Area type="monotone" dataKey="inc" stroke="#6366f1" fillOpacity={1} fill="url(#colorInc)" />
-                                <Area type="monotone" dataKey="exp" stroke="#ec4899" fillOpacity={1} fill="url(#colorExp)" />
+                                <Area type="monotone" dataKey="inc" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorInc)" />
+                                <Area type="monotone" dataKey="exp" stroke="#ec4899" strokeWidth={2} fillOpacity={1} fill="url(#colorExp)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                <div className="chart-container glass-card">
+                <div className="chart-container">
                     <h3>Inventory Distribution</h3>
                     <div className="chart-wrapper">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={inventoryData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                                <XAxis dataKey="name" stroke="#94a3b8" />
-                                <YAxis stroke="#94a3b8" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                                <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                                    cursor={{ fill: 'transparent' }}
+                                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                                    itemStyle={{ color: '#1e293b' }}
                                 />
-                                <Bar dataKey="value" fill="#818cf8" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="value" fill="#818cf8" radius={[4, 4, 0, 0]} barSize={40} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
             </div>
-
-            <style>{`
-        .dashboard-page {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
-
-        .page-header h1 {
-          font-size: 2rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .page-header p {
-          color: #94a3b8;
-        }
-
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .stat-card {
-          display: flex;
-          align-items: center;
-          gap: 1.25rem;
-        }
-
-        .stat-icon {
-          width: 56px;
-          height: 56px;
-          border-radius: 1rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .stat-icon.exp { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
-        .stat-icon.inc { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-        .stat-icon.in { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
-        .stat-icon.out { background: rgba(234, 179, 8, 0.1); color: #eab308; }
-
-        .stat-info label {
-          font-size: 0.875rem;
-          color: #94a3b8;
-          font-weight: 500;
-        }
-
-        .stat-info h3 {
-          font-size: 1.5rem;
-          margin: 0.25rem 0;
-        }
-
-        .trend {
-          font-size: 0.75rem;
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-        }
-
-        .trend.positive { color: #22c55e; }
-        .trend.negative { color: #ef4444; }
-        .trend.neutral { color: #94a3b8; }
-
-        .charts-grid {
-          display: grid;
-          grid-template-columns: 2fr 1fr;
-          gap: 1.5rem;
-        }
-
-        .chart-container h3 {
-          font-size: 1.125rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .chart-wrapper {
-          height: 300px;
-          width: 100%;
-        }
-
-        @media (max-width: 1024px) {
-          .charts-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
         </div>
     );
 };
+
 
 export default Dashboard;
