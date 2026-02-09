@@ -123,18 +123,19 @@ const RecordsList = ({ type }: RecordsListProps) => {
                         <table className="records-table compact-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: '40%' }}>Title / Supplier</th>
-                                    <th style={{ width: '20%' }}>Account</th>
+                                    <th style={{ width: '30%' }}>Title / Supplier</th>
+                                    <th style={{ width: '10%' }}>Currency</th>
                                     <th style={{ width: '15%', textAlign: 'right' }}>Amount</th>
                                     <th style={{ width: '15%', textAlign: 'center' }}>Status</th>
-                                    <th style={{ width: '10%', textAlign: 'right' }}>Time</th>
+                                    <th style={{ width: '15%' }}>Creator</th>
+                                    <th style={{ width: '15%', textAlign: 'right' }}>Created At</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {Object.keys(groupedRecords).map((date) => (
                                     <>
                                         <tr key={`header-${date}`} className="date-header-row">
-                                            <td colSpan={5}>{date}</td>
+                                            <td colSpan={6}>Date: {date}</td>
                                         </tr>
                                         {groupedRecords[date].map((record: any) => {
                                             const statusStyle = getStatusStyle(record.status);
@@ -146,11 +147,10 @@ const RecordsList = ({ type }: RecordsListProps) => {
                                                 >
                                                     <td>
                                                         <div className="cell-primary">{getDisplayName(record)}</div>
+                                                        <div className="cell-secondary">{record.account?.name || 'No Account'}</div>
                                                     </td>
                                                     <td>
-                                                        <span className="account-badge">
-                                                            {record.account?.name || '-'}
-                                                        </span>
+                                                        <span className="currency-badge">{record.currency || 'USD'}</span>
                                                     </td>
                                                     <td style={{ textAlign: 'right' }}>
                                                         <span className="amount-cell">
@@ -159,17 +159,19 @@ const RecordsList = ({ type }: RecordsListProps) => {
                                                     </td>
                                                     <td style={{ textAlign: 'center' }}>
                                                         <span
-                                                            className="status-pill"
-                                                            style={{
-                                                                color: statusStyle.color,
-                                                                backgroundColor: statusStyle.bg
-                                                            }}
+                                                            className="status-text-mobile"
+                                                            style={{ color: statusStyle.color }}
                                                         >
                                                             {statusStyle.text}
                                                         </span>
                                                     </td>
-                                                    <td style={{ textAlign: 'right', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
-                                                        {record.created_at ? new Date(record.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                    <td>
+                                                        <span className="meta-text">{record.created_by_user?.email || '-'}</span>
+                                                    </td>
+                                                    <td style={{ textAlign: 'right' }}>
+                                                        <span className="meta-text">
+                                                            {record.created_at ? new Date(record.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                        </span>
                                                     </td>
                                                 </tr>
                                             );
