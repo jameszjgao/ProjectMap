@@ -84,21 +84,55 @@ const RecordsList = ({ type }: RecordsListProps) => {
         }
     };
 
-    // Group records by date
+    const [groupingDim, setGroupingDim] = useState<'date' | 'supplier' | 'none'>('date');
+    const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+    // Group records based on selected dimension
     const groupedRecords = records.reduce((groups: any, record) => {
-        const date = record.date ? new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown Date';
-        if (!groups[date]) {
-            groups[date] = [];
+        let key = 'All Records';
+        if (groupingDim === 'date') {
+            key = record.date ? new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown Date';
+        } else if (groupingDim === 'supplier') {
+            if (type === 'expenditure' || type === 'inbound') {
+                key = record.supplier?.name || record.supplier_name || 'No Supplier';
+            } else {
+                key = record.customer?.name || record.customer_name || 'No Customer';
+            }
         }
-        groups[date].push(record);
+
+        if (!groups[key]) {
+            groups[key] = [];
+        }
+        groups[key].push(record);
         return groups;
     }, {});
+
+    const toggleGroup = (groupKey: string) => {
+        const newCollapsed = new Set(collapsedGroups);
+        if (newCollapsed.has(groupKey)) {
+            newCollapsed.delete(groupKey);
+        } else {
+            newCollapsed.add(groupKey);
+        }
+        setCollapsedGroups(newCollapsed);
+    };
 
     return (
         <div className="records-page compact">
             <div className="compact-header">
-                <div>
+                <div className="header-left">
                     <h1>{config[type].title}</h1>
+                    <div className="grouping-controls">
+                        <select
+                            value={groupingDim}
+                            onChange={(e) => setGroupingDim(e.target.value as any)}
+                            className="grouping-select"
+                        >
+                            <option value="date">Group by Date</option>
+                            <option value="supplier">{type === 'expenditure' || type === 'inbound' ? 'Group by Supplier' : 'Group by Customer'}</option>
+                            <option value="none">No Grouping</option>
+                        </select>
+                    </div>
                 </div>
                 <div className="header-actions">
                     <button className="icon-btn">
@@ -132,12 +166,29 @@ const RecordsList = ({ type }: RecordsListProps) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.keys(groupedRecords).map((date) => (
+                                {Object.keys(groupedRecords).map((groupKey) => (
                                     <>
-                                        <tr key={`header-${date}`} className="date-header-row">
-                                            <td colSpan={6}>Date: {date}</td>
-                                        </tr>
-                                        {groupedRecords[date].map((record: any) => {
+                                        {groupingDim !== 'none' && (
+                                            <tr
+                                                key={`header-${groupKey}`}
+                                                className="date-header-row"
+                                                onClick={() => toggleGroup(groupKey)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                <td colSpan={6}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <span style={{ transform: collapsedGroups.has(groupKey) ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                                                            ▼
+                                                        </span>
+                                                        {groupingDim === 'date' ? `Date: ${groupKey}` : groupKey}
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 'normal', marginLeft: 'auto' }}>
+                                                            {groupedRecords[groupKey].length} records
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                        {(!collapsedGroups.has(groupKey) || groupingDim === 'none') && groupedRecords[groupKey].map((record: any) => {
                                             const statusStyle = getStatusStyle(record.status);
                                             return (
                                                 <tr
