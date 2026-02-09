@@ -45,7 +45,7 @@ const SetPassword = () => {
             } else {
                 if (!cancelled) {
                     setCheckingAuth(false);
-                    setError('Your password reset session has expired. Please request a new password reset link.');
+                    setError('This link has expired or has already been used. Please request a new link.');
                     setTimeout(() => navigate('/reset-password'), 3000);
                 }
             }

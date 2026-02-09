@@ -108,12 +108,12 @@ const AuthConfirm = () => {
             }
 
             setStatus('error');
-            setMessage('Invalid confirmation link. Please try again.');
+            setMessage('This link has expired or has already been used. Please request a new link.');
             setTimeout(() => navigate('/login'), 3000);
         } catch (err: any) {
             console.error('Auth confirm error:', err);
             setStatus('error');
-            setMessage(err?.message || 'Confirmation failed. The link may have expired. Please request a new one.');
+            setMessage('This link has expired or has already been used. Please request a new link.');
             setTimeout(() => navigate('/login'), 3000);
         }
     }, [navigate, ensureUserRecord]);
@@ -124,7 +124,7 @@ const AuthConfirm = () => {
 
         if (!hasToken) {
             setStatus('error');
-            setMessage('Invalid confirmation link. Please try again.');
+            setMessage('This link has expired or has already been used. Please request a new link.');
             setTimeout(() => navigate('/login'), 3000);
             return;
         }
@@ -178,9 +178,9 @@ const AuthConfirm = () => {
                 )}
                 {status === 'error' && (
                     <>
-                        <XCircle size={48} style={{ margin: '0 auto 1rem', color: '#ef4444' }} />
+                        <XCircle size={48} style={{ margin: '0 auto 1rem', color: '#f59e0b' }} />
                         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem', color: '#1f2937' }}>
-                            Error
+                            Link expired
                         </h2>
                         <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1rem' }}>{message}</p>
                         <p style={{ color: '#9ca3af', fontSize: '0.75rem' }}>Redirecting to login...</p>
