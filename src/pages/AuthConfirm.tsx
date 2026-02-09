@@ -58,53 +58,60 @@ const AuthConfirm = () => {
     }, []);
 
     const processConfirm = useCallback(async () => {
-        const { accessToken, refreshToken, tokenHash, type } = getParamsFromUrl();
+        try {
+            const { accessToken, refreshToken, tokenHash, type } = getParamsFromUrl();
 
-        if (accessToken && refreshToken) {
-            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-            });
-            if (sessionError) throw sessionError;
-            if (sessionData?.user) await ensureUserRecord(sessionData.user);
-            setStatus('success');
-            if (type === 'recovery') {
-                setMessage('Password reset verified! Redirecting to set new password...');
-                setTimeout(() => navigate('/set-password'), 1500);
-            } else if (type === 'email_change') {
-                setMessage('Email change confirmed! Your email has been updated.');
-                setTimeout(() => navigate('/profile'), 2000);
-            } else {
-                setMessage('Email confirmed successfully!');
-                setTimeout(() => navigate('/'), 2000);
+            if (accessToken && refreshToken) {
+                const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                });
+                if (sessionError) throw sessionError;
+                if (sessionData?.user) await ensureUserRecord(sessionData.user);
+                setStatus('success');
+                if (type === 'recovery') {
+                    setMessage('Password reset verified! Redirecting to set new password...');
+                    setTimeout(() => navigate('/set-password'), 1500);
+                } else if (type === 'email_change') {
+                    setMessage('Email change confirmed! Your email has been updated.');
+                    setTimeout(() => navigate('/profile'), 2000);
+                } else {
+                    setMessage('Email confirmed successfully!');
+                    setTimeout(() => navigate('/'), 2000);
+                }
+                return;
             }
-            return;
-        }
 
-        if (tokenHash) {
-            const { data, error } = await supabase.auth.verifyOtp({
-                token_hash: tokenHash,
-                type: (type as any) || 'email',
-            });
-            if (error) throw error;
-            if (data?.user) await ensureUserRecord(data.user);
-            setStatus('success');
-            if (type === 'recovery') {
-                setMessage('Password reset verified! Redirecting to set new password...');
-                setTimeout(() => navigate('/set-password'), 1500);
-            } else if (type === 'email_change') {
-                setMessage('Email change confirmed!');
-                setTimeout(() => navigate('/profile'), 2000);
-            } else {
-                setMessage('Email confirmed successfully!');
-                setTimeout(() => navigate('/'), 2000);
+            if (tokenHash) {
+                const { data, error } = await supabase.auth.verifyOtp({
+                    token_hash: tokenHash,
+                    type: (type as any) || 'email',
+                });
+                if (error) throw error;
+                if (data?.user) await ensureUserRecord(data.user);
+                setStatus('success');
+                if (type === 'recovery') {
+                    setMessage('Password reset verified! Redirecting to set new password...');
+                    setTimeout(() => navigate('/set-password'), 1500);
+                } else if (type === 'email_change') {
+                    setMessage('Email change confirmed!');
+                    setTimeout(() => navigate('/profile'), 2000);
+                } else {
+                    setMessage('Email confirmed successfully!');
+                    setTimeout(() => navigate('/'), 2000);
+                }
+                return;
             }
-            return;
-        }
 
-        setStatus('error');
-        setMessage('Invalid confirmation link. Please try again.');
-        setTimeout(() => navigate('/login'), 3000);
+            setStatus('error');
+            setMessage('Invalid confirmation link. Please try again.');
+            setTimeout(() => navigate('/login'), 3000);
+        } catch (err: any) {
+            console.error('Auth confirm error:', err);
+            setStatus('error');
+            setMessage(err?.message || 'Confirmation failed. The link may have expired. Please request a new one.');
+            setTimeout(() => navigate('/login'), 3000);
+        }
     }, [navigate, ensureUserRecord]);
 
     useEffect(() => {

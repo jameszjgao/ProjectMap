@@ -92,6 +92,8 @@ function App() {
                                         <Route path="/detail/:type/:id" element={<RecordDetail />} />
                                         <Route path="/profile" element={<UserProfile />} />
                                         <Route path="/space-manage" element={<SpaceManage />} />
+                                        <Route path="/auth/confirm" element={<AuthConfirm />} />
+                                        <Route path="/set-password" element={<SetPassword />} />
                                         <Route path="*" element={<Navigate to="/" replace />} />
                                     </Routes>
                                 </div>
