@@ -84,28 +84,54 @@ const RecordsList = ({ type }: RecordsListProps) => {
         }
     };
 
-    const [groupingDim, setGroupingDim] = useState<'date' | 'supplier' | 'none'>('date');
+    const [groupingDim, setGroupingDim] = useState<'month' | 'recordDate' | 'paymentAccount' | 'createdBy' | 'none'>('recordDate');
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Filter records based on search query
+    const filteredRecords = records.filter(record => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        const name = getDisplayName(record).toLowerCase();
+        const amount = record.total_amount?.toString() || '';
+        const account = record.account?.name?.toLowerCase() || '';
+        return name.includes(query) || amount.includes(query) || account.includes(query);
+    });
 
     // Group records based on selected dimension
-    const groupedRecords = records.reduce((groups: any, record) => {
+    const groupedRecords = filteredRecords.reduce((groups: any, record) => {
         let key = 'All Records';
-        if (groupingDim === 'date') {
-            key = record.date ? new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown Date';
-        } else if (groupingDim === 'supplier') {
-            if (type === 'expenditure' || type === 'inbound') {
-                key = record.supplier?.name || record.supplier_name || 'No Supplier';
-            } else {
-                key = record.customer?.name || record.customer_name || 'No Customer';
-            }
+        let sortValue = 0;
+
+        if (groupingDim === 'month') {
+            const date = record.date ? new Date(record.date) : new Date();
+            key = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            sortValue = date.getTime();
+        } else if (groupingDim === 'recordDate') {
+            const date = record.created_at ? new Date(record.created_at) : (record.date ? new Date(record.date) : new Date());
+            key = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            sortValue = date.getTime();
+        } else if (groupingDim === 'paymentAccount') {
+            key = record.account?.name || 'No Account';
+            sortValue = key.localeCompare('');
+        } else if (groupingDim === 'createdBy') {
+            key = record.created_by_user?.name || record.created_by_user?.email || 'Unknown User';
+            sortValue = key.localeCompare('');
         }
 
         if (!groups[key]) {
-            groups[key] = [];
+            groups[key] = { items: [], sortValue };
         }
-        groups[key].push(record);
+        groups[key].items.push(record);
         return groups;
     }, {});
+
+    const sortedGroupKeys = Object.keys(groupedRecords).sort((a, b) => {
+        if (groupingDim === 'month' || groupingDim === 'recordDate') {
+            return groupedRecords[b].sortValue - groupedRecords[a].sortValue;
+        }
+        return a.localeCompare(b);
+    });
 
     const toggleGroup = (groupKey: string) => {
         const newCollapsed = new Set(collapsedGroups);
@@ -128,16 +154,25 @@ const RecordsList = ({ type }: RecordsListProps) => {
                             onChange={(e) => setGroupingDim(e.target.value as any)}
                             className="grouping-select"
                         >
-                            <option value="date">Group by Date</option>
-                            <option value="supplier">{type === 'expenditure' || type === 'inbound' ? 'Group by Supplier' : 'Group by Customer'}</option>
+                            <option value="recordDate">Group by Record Date</option>
+                            <option value="month">Group by Transaction Month</option>
+                            <option value="paymentAccount">Group by Account</option>
+                            <option value="createdBy">Group by User</option>
                             <option value="none">No Grouping</option>
                         </select>
                     </div>
                 </div>
                 <div className="header-actions">
-                    <button className="icon-btn">
-                        <Search size={20} />
-                    </button>
+                    <div className="header-search-container">
+                        <Search size={16} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="header-search-input"
+                        />
+                    </div>
                     <button className="icon-btn">
                         <Filter size={20} />
                     </button>
@@ -166,7 +201,7 @@ const RecordsList = ({ type }: RecordsListProps) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.keys(groupedRecords).map((groupKey) => (
+                                {sortedGroupKeys.map((groupKey) => (
                                     <>
                                         {groupingDim !== 'none' && (
                                             <tr
@@ -180,15 +215,17 @@ const RecordsList = ({ type }: RecordsListProps) => {
                                                         <span style={{ transform: collapsedGroups.has(groupKey) ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
                                                             ▼
                                                         </span>
-                                                        {groupingDim === 'date' ? `Date: ${groupKey}` : groupKey}
+                                                        <span style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>
+                                                            {groupKey}
+                                                        </span>
                                                         <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 'normal', marginLeft: 'auto' }}>
-                                                            {groupedRecords[groupKey].length} records
+                                                            {groupedRecords[groupKey].items.length} records
                                                         </span>
                                                     </div>
                                                 </td>
                                             </tr>
                                         )}
-                                        {(!collapsedGroups.has(groupKey) || groupingDim === 'none') && groupedRecords[groupKey].map((record: any) => {
+                                        {(!collapsedGroups.has(groupKey) || groupingDim === 'none') && groupedRecords[groupKey].items.map((record: any) => {
                                             const statusStyle = getStatusStyle(record.status);
                                             return (
                                                 <tr
