@@ -119,44 +119,69 @@ const RecordsList = ({ type }: RecordsListProps) => {
                         <div className="loader"></div>
                     </div>
                 ) : (
-                    Object.keys(groupedRecords).map((date) => (
-                        <div key={date} className="date-section">
-                            <div className="section-header">{date}</div>
-                            <div className="section-items">
-                                {groupedRecords[date].map((record: any) => {
-                                    const statusStyle = getStatusStyle(record.status);
-                                    return (
-                                        <div
-                                            key={record.id}
-                                            className="mobile-record-item"
-                                            onClick={() => navigate(`/detail/${type}/${record.id}`)}
-                                        >
-                                            <div className="item-left">
-                                                <div className="item-title">{getDisplayName(record)}</div>
-                                                <div className="item-subtitle">
-                                                    <span className="account-tag">{record.account?.name || 'No Account'}</span>
-                                                    <span className="status-dot" style={{ backgroundColor: statusStyle.color }}></span>
-                                                    <span className="status-text" style={{ color: statusStyle.color }}>{statusStyle.text}</span>
-                                                </div>
-                                            </div>
-                                            <div className="item-right">
-                                                <div className="item-amount">
-                                                    <span className="currency">$</span>
-                                                    {Number(record.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                </div>
-                                                <div className="item-time">
-                                                    {record.created_at ? new Date(record.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))
-                )}
-                {!loading && records.length === 0 && (
-                    <div className="empty-state">No records found.</div>
+                    <div className="records-table-container">
+                        <table className="records-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '40%' }}>Title / Supplier</th>
+                                    <th style={{ width: '20%' }}>Account</th>
+                                    <th style={{ width: '15%', textAlign: 'right' }}>Amount</th>
+                                    <th style={{ width: '15%', textAlign: 'center' }}>Status</th>
+                                    <th style={{ width: '10%', textAlign: 'right' }}>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.keys(groupedRecords).map((date) => (
+                                    <>
+                                        <tr key={`header-${date}`} className="date-header-row">
+                                            <td colSpan={5}>{date}</td>
+                                        </tr>
+                                        {groupedRecords[date].map((record: any) => {
+                                            const statusStyle = getStatusStyle(record.status);
+                                            return (
+                                                <tr
+                                                    key={record.id}
+                                                    className="record-row"
+                                                    onClick={() => navigate(`/detail/${type}/${record.id}`)}
+                                                >
+                                                    <td>
+                                                        <div className="cell-primary">{getDisplayName(record)}</div>
+                                                    </td>
+                                                    <td>
+                                                        <span className="account-badge">
+                                                            {record.account?.name || '-'}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ textAlign: 'right' }}>
+                                                        <span className="amount-cell">
+                                                            {Number(record.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        <span
+                                                            className="status-pill"
+                                                            style={{
+                                                                color: statusStyle.color,
+                                                                backgroundColor: statusStyle.bg
+                                                            }}
+                                                        >
+                                                            {statusStyle.text}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ textAlign: 'right', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
+                                                        {record.created_at ? new Date(record.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </>
+                                ))}
+                            </tbody>
+                        </table>
+                        {!loading && records.length === 0 && (
+                            <div className="empty-state">No records found.</div>
+                        )}
+                    </div>
                 )}
             </div>
         </div>
