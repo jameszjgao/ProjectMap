@@ -21,23 +21,35 @@ const Dashboard = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            // Fetch stats from Supabase
-            // In a real app, you would use aggregations or separate tables for stats
-            const { data: receipts } = await supabase.from('receipts').select('total_amount');
-            const { data: invoices } = await supabase.from('invoices').select('total_amount');
-            const { count: inboundCount } = await supabase.from('inbound').select('*', { count: 'exact', head: true });
-            const { count: outboundCount } = await supabase.from('outbound').select('*', { count: 'exact', head: true });
+            try {
+                // 并行查询优化：使用 Promise.all 同时发起所有请求，减少等待时间
+                // 注意：理想情况下应该使用 Supabase RPC 函数进行数据库端聚合，避免传输全表数据
+                const [
+                    { data: receipts },
+                    { data: invoices },
+                    { count: inboundCount },
+                    { count: outboundCount },
+                ] = await Promise.all([
+                    supabase.from('receipts').select('total_amount'),
+                    supabase.from('invoices').select('total_amount'),
+                    supabase.from('inbound').select('*', { count: 'exact', head: true }),
+                    supabase.from('outbound').select('*', { count: 'exact', head: true }),
+                ]);
 
-            const totalExp = receipts?.reduce((acc, curr) => acc + Number(curr.total_amount), 0) || 0;
-            const totalInc = invoices?.reduce((acc, curr) => acc + Number(curr.total_amount), 0) || 0;
+                const totalExp = receipts?.reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0) || 0;
+                const totalInc = invoices?.reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0) || 0;
 
-            setStats({
-                expenditure: totalExp,
-                income: totalInc,
-                inboundCount: inboundCount || 0,
-                outboundCount: outboundCount || 0
-            });
-            setLoading(false);
+                setStats({
+                    expenditure: totalExp,
+                    income: totalInc,
+                    inboundCount: inboundCount || 0,
+                    outboundCount: outboundCount || 0
+                });
+            } catch (error) {
+                console.error('Failed to load dashboard stats:', error);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchData();

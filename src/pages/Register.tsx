@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Loader2 } from 'lucide-react';
 
-const Login = () => {
+const Register = () => {
     const navigate = useNavigate();
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
     const [isDark, setIsDark] = useState(false);
 
     // 检测系统深色模式偏好
@@ -21,18 +24,59 @@ const Login = () => {
         return () => mediaQuery.removeEventListener('change', handleChange);
     }, []);
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
+        setSuccess(false);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        // 验证密码
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
 
-        if (error) {
-            setError(error.message);
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const { data, error: signUpError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        name: name || email.split('@')[0],
+                    },
+                    emailRedirectTo: `${window.location.origin}/auth/confirm`,
+                },
+            });
+
+            if (signUpError) {
+                // 处理邮箱已存在的错误
+                if (signUpError.message?.toLowerCase().includes('already registered') ||
+                    signUpError.message?.toLowerCase().includes('email already')) {
+                    setError('This email is already registered. Please sign in instead.');
+                } else {
+                    setError(signUpError.message);
+                }
+                setLoading(false);
+                return;
+            }
+
+            // 检查是否需要邮箱确认
+            if (data.user && !data.session) {
+                setSuccess(true);
+                setError(null);
+            } else if (data.session) {
+                // 如果直接登录成功，跳转到首页
+                navigate('/');
+            }
+        } catch (err: any) {
+            setError(err.message || 'Registration failed');
+        } finally {
             setLoading(false);
         }
     };
@@ -51,52 +95,92 @@ const Login = () => {
                     </p>
                 </div>
 
-                <form onSubmit={handleLogin} className="login-form">
-                    <div className="input-group">
-                        <label>Email Address</label>
-                        <div className="input-wrapper">
-                            <Mail className="input-icon" size={20} />
-                            <input
-                                type="email"
-                                placeholder="name@company.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
+                {success ? (
+                    <div className="success-message">
+                        <h3>Check your email</h3>
+                        <p>We've sent a confirmation link to {email}. Please check your inbox and click the link to verify your account.</p>
+                        <Link to="/login" className="login-link">
+                            <p>Back to <span>Sign In</span></p>
+                        </Link>
                     </div>
-
-                    <div className="input-group">
-                        <label>Password</label>
-                        <div className="input-wrapper">
-                            <Lock className="input-icon" size={20} />
-                            <input
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
+                ) : (
+                    <form onSubmit={handleRegister} className="login-form">
+                        <div className="input-group">
+                            <label>Full Name</label>
+                            <div className="input-wrapper">
+                                <User className="input-icon" size={20} />
+                                <input
+                                    type="text"
+                                    placeholder="John Doe"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    autoComplete="name"
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    {error && <div className="error-message">{error}</div>}
+                        <div className="input-group">
+                            <label>Email Address</label>
+                            <div className="input-wrapper">
+                                <Mail className="input-icon" size={20} />
+                                <input
+                                    type="email"
+                                    placeholder="name@company.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    autoComplete="email"
+                                />
+                            </div>
+                        </div>
 
-                    <button type="submit" className="login-btn" disabled={loading}>
-                        {loading ? (
-                            <Loader2 className="animate-spin" size={20} />
-                        ) : (
-                            'Sign In'
-                        )}
-                    </button>
-                </form>
+                        <div className="input-group">
+                            <label>Password</label>
+                            <div className="input-wrapper">
+                                <Lock className="input-icon" size={20} />
+                                <input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    minLength={6}
+                                    autoComplete="new-password"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="input-group">
+                            <label>Confirm Password</label>
+                            <div className="input-wrapper">
+                                <Lock className="input-icon" size={20} />
+                                <input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                    minLength={6}
+                                    autoComplete="new-password"
+                                />
+                            </div>
+                        </div>
+
+                        {error && <div className="error-message">{error}</div>}
+
+                        <button type="submit" className="login-btn" disabled={loading}>
+                            {loading ? (
+                                <Loader2 className="animate-spin" size={20} />
+                            ) : (
+                                'Sign Up'
+                            )}
+                        </button>
+                    </form>
+                )}
 
                 <div className="login-footer">
-                    <Link to="/reset-password" className="login-link">
-                        <p>Forgot password? <span>Reset It</span></p>
-                    </Link>
-                    <Link to="/register" className="login-link">
-                        <p>Don't have an account? <span>Sign Up</span></p>
+                    <Link to="/login" className="login-link">
+                        <p>Already have an account? <span>Sign In</span></p>
                     </Link>
                 </div>
             </div>
@@ -299,6 +383,34 @@ const Login = () => {
           border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
+        .success-message {
+          text-align: center;
+          padding: 1.5rem 0;
+        }
+
+        .success-message h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #0a0a0a;
+          margin-bottom: 0.75rem;
+          font-family: 'Poppins', sans-serif;
+        }
+
+        .login-page.dark .success-message h3 {
+          color: #ededed;
+        }
+
+        .success-message p {
+          color: #636e72;
+          font-size: 0.875rem;
+          line-height: 1.6;
+          margin-bottom: 1.5rem;
+        }
+
+        .login-page.dark .success-message p {
+          color: #94a3b8;
+        }
+
         .login-btn {
           margin-top: 1rem;
           padding: 1rem;
@@ -377,4 +489,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Register;

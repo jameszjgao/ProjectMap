@@ -8,6 +8,43 @@
     padding: 1.5rem;
     position: sticky;
     top: 0;
+    transition: width 0.3s ease;
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 80px;
+    padding: 1.5rem 0.75rem;
+}
+
+.sidebar-toggle-btn {
+    position: absolute;
+    top: 1.5rem;
+    left: -12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    color: var(--color-text-secondary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-toggle-btn:hover {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.sidebar.collapsed .sidebar-toggle-btn {
+    left: -12px;
 }
 
 .sidebar-logo {
@@ -16,61 +53,163 @@
     gap: 0.75rem;
     margin-bottom: 1.5rem;
     padding-left: 0.5rem;
+    transition: padding 0.3s ease;
 }
 
-.sidebar-top {
-    margin-bottom: 2rem;
+.sidebar.collapsed .sidebar-logo {
+    padding-left: 0;
+    justify-content: center;
 }
 
-.sidebar-user-info {
-    padding: 0.75rem 1rem;
-    background-color: var(--color-input-bg);
-    border-radius: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    border: 1px solid var(--color-border);
-}
-
-.user-item {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    color: var(--color-text-secondary);
-    font-size: 0.8125rem;
-}
-
-.user-text {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 150px;
-}
-
-.user-icon {
-    color: var(--color-primary);
+.sidebar-logo-img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
     flex-shrink: 0;
 }
 
-.logo-icon {
-    width: 32px;
-    height: 32px;
-    background-color: var(--color-primary);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: white;
-    font-size: 1.25rem;
-}
-
-.sidebar-logo span {
-    font-family: 'Outfit', sans-serif;
+.sidebar-logo-text {
+    font-family: 'Poppins', 'Outfit', sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
     letter-spacing: -0.025em;
     color: var(--color-text-main);
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-logo-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar-top {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Space Information - Top */
+.sidebar-space-info {
+    padding: 0.75rem 1rem;
+    background-color: var(--color-surface);
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-space-info:hover {
+    background-color: var(--color-input-bg);
+    border-color: var(--color-primary);
+}
+
+.sidebar.collapsed .sidebar-space-info {
+    display: none;
+}
+
+.sidebar-bottom-section {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* User Information - Bottom */
+.sidebar-user-info-bottom {
+    padding: 0.75rem 1rem;
+    background-color: var(--color-surface);
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-user-info-bottom:hover {
+    background-color: var(--color-input-bg);
+    border-color: var(--color-primary);
+}
+
+.sidebar.collapsed .sidebar-user-info-bottom {
+    display: none;
+}
+
+.info-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.info-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.info-avatar.user-avatar {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.info-avatar.space-avatar {
+    background-color: rgba(108, 92, 231, 0.15);
+    color: var(--color-primary);
+}
+
+.info-avatar-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+}
+
+.info-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.info-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.info-secondary {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.info-manage-icon {
+    color: var(--color-primary);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+}
+
+.info-name-row:hover .info-manage-icon {
+    opacity: 1;
+}
+
+.sidebar-space-info:hover .info-manage-icon,
+.sidebar-user-info-bottom:hover .info-manage-icon {
+    opacity: 1;
 }
 
 .sidebar-nav {
@@ -78,6 +217,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .nav-item {
@@ -90,6 +230,22 @@
     text-decoration: none;
     transition: all 0.2s ease;
     font-weight: 500;
+    white-space: nowrap;
+}
+
+.sidebar.collapsed .nav-item {
+    padding: 0.875rem;
+    justify-content: center;
+}
+
+.nav-item span {
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .nav-item span {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
 }
 
 .nav-item:hover {
@@ -101,30 +257,4 @@
     background-color: var(--color-primary-light);
     color: var(--color-primary);
     font-weight: 600;
-}
-
-.sidebar-footer {
-    margin-top: auto;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-border);
-}
-
-.logout-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 1rem;
-    background-color: transparent;
-    border: none;
-    color: var(--color-danger);
-    cursor: pointer;
-    border-radius: 0.75rem;
-    transition: all 0.2s ease;
-    font-weight: 500;
-    font-size: 1rem;
-}
-
-.logout-btn:hover {
-    background-color: rgba(231, 76, 60, 0.1);
 }

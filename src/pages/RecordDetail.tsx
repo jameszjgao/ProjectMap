@@ -14,6 +14,7 @@ const RecordDetail = () => {
   const [saving, setSaving] = useState(false);
   const [record, setRecord] = useState<any>({});
   const [items, setItems] = useState<any[]>([]);
+  const [imageError, setImageError] = useState(false);
 
   // Metadata state
   const [categories, setCategories] = useState<any[]>([]);
@@ -63,6 +64,7 @@ const RecordDetail = () => {
 
         if (error) throw error;
         setRecord(recordData);
+        setImageError(false); // 重置图片错误状态
 
         // Fetch items
         // Depending on table, the foreign key might differ clearly
@@ -143,7 +145,7 @@ const RecordDetail = () => {
     // Auto-recalculate total
     if (field === 'price' || field === 'unit_price' || field === 'quantity') {
       const newTotal = calculateTotal(newItems, record.tax || 0);
-      setRecord(prev => ({ ...prev, total_amount: newTotal }));
+      setRecord((prev: any) => ({ ...prev, total_amount: newTotal }));
     }
   };
 
@@ -163,7 +165,7 @@ const RecordDetail = () => {
     const newItems = items.filter((_, i) => i !== index);
     setItems(newItems);
     const newTotal = calculateTotal(newItems, record.tax || 0);
-    setRecord(prev => ({ ...prev, total_amount: newTotal }));
+    setRecord((prev: any) => ({ ...prev, total_amount: newTotal }));
   };
 
   if (loading) return <div className="loading-container"><div className="loader"></div></div>;
@@ -188,8 +190,15 @@ const RecordDetail = () => {
 
       <div className="summary-card">
         <div className="image-upload-container">
-          {record.image_url ? (
-            <img src={record.image_url} alt="Receipt" className="image-preview" />
+          {record.image_url && !imageError ? (
+            <img
+              src={record.image_url}
+              alt="Receipt"
+              className="image-preview"
+              loading="lazy"
+              onError={() => setImageError(true)}
+              style={{ maxWidth: '100%', height: 'auto' }}
+            />
           ) : (
             <div className="image-placeholder">
               <ImageIcon size={24} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Plus, Search, Filter,
@@ -43,26 +43,26 @@ const RecordsList = ({ type }: RecordsListProps) => {
                 .select('*')
                 .order('date', { ascending: false });
 
-            // Add relations based on type
+            // 精简 select 字段：只查询列表实际使用的字段，减少数据传输量
             if (type === 'expenditure') {
                 query = supabase
                     .from(config[type].table)
-                    .select('*, supplier:supplier_id(name), supplierCustomer:supplier_customer_id(name), account:account_id(name)')
+                    .select('id, date, total_amount, currency, status, created_at, account:account_id(name), supplier:supplier_id(name), supplierCustomer:supplier_customer_id(name), created_by_user:created_by(email)')
                     .order('date', { ascending: false });
             } else if (type === 'income') {
                 query = supabase
                     .from(config[type].table)
-                    .select('*, customer:customer_id(name), customerSupplier:customer_supplier_id(name), account:account_id(name)')
+                    .select('id, date, total_amount, currency, status, created_at, account:account_id(name), customer:customer_id(name), customerSupplier:customer_supplier_id(name), created_by_user:created_by(email)')
                     .order('date', { ascending: false });
             } else if (type === 'inbound') {
                 query = supabase
                     .from(config[type].table)
-                    .select('*, supplier:supplier_id(name)')
+                    .select('id, date, total_amount, currency, status, created_at, supplier:supplier_id(name), created_by_user:created_by(email)')
                     .order('date', { ascending: false });
             } else if (type === 'outbound') {
                 query = supabase
                     .from(config[type].table)
-                    .select('*, customer:customer_id(name)')
+                    .select('id, date, total_amount, currency, status, created_at, customer:customer_id(name), created_by_user:created_by(email)')
                     .order('date', { ascending: false });
             }
 
@@ -88,43 +88,47 @@ const RecordsList = ({ type }: RecordsListProps) => {
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Filter records based on search query
-    const filteredRecords = records.filter(record => {
-        if (!searchQuery) return true;
-        const query = searchQuery.toLowerCase();
-        const name = getDisplayName(record).toLowerCase();
-        const amount = record.total_amount?.toString() || '';
-        const account = record.account?.name?.toLowerCase() || '';
-        return name.includes(query) || amount.includes(query) || account.includes(query);
-    });
+    // 使用 useMemo 优化过滤逻辑，避免每次渲染都重新计算
+    const filteredRecords = useMemo(() => {
+        return records.filter(record => {
+            if (!searchQuery) return true;
+            const query = searchQuery.toLowerCase();
+            const name = getDisplayName(record).toLowerCase();
+            const amount = record.total_amount?.toString() || '';
+            const account = record.account?.name?.toLowerCase() || '';
+            return name.includes(query) || amount.includes(query) || account.includes(query);
+        });
+    }, [records, searchQuery, type]);
 
-    // Group records based on selected dimension
-    const groupedRecords = filteredRecords.reduce((groups: any, record) => {
-        let key = 'All Records';
-        let sortValue = 0;
+    // 使用 useMemo 优化分组逻辑，避免每次渲染都重新计算
+    const groupedRecords = useMemo(() => {
+        return filteredRecords.reduce((groups: Record<string, { items: any[]; sortValue: number }>, record) => {
+            let key = 'All Records';
+            let sortValue = 0;
 
-        if (groupingDim === 'month') {
-            const date = record.date ? new Date(record.date) : new Date();
-            key = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-            sortValue = date.getTime();
-        } else if (groupingDim === 'recordDate') {
-            const date = record.created_at ? new Date(record.created_at) : (record.date ? new Date(record.date) : new Date());
-            key = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            sortValue = date.getTime();
-        } else if (groupingDim === 'paymentAccount') {
-            key = record.account?.name || 'No Account';
-            sortValue = key.localeCompare('');
-        } else if (groupingDim === 'createdBy') {
-            key = record.created_by_user?.name || record.created_by_user?.email || 'Unknown User';
-            sortValue = key.localeCompare('');
-        }
+            if (groupingDim === 'month') {
+                const date = record.date ? new Date(record.date) : new Date();
+                key = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                sortValue = date.getTime();
+            } else if (groupingDim === 'recordDate') {
+                const date = record.created_at ? new Date(record.created_at) : (record.date ? new Date(record.date) : new Date());
+                key = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                sortValue = date.getTime();
+            } else if (groupingDim === 'paymentAccount') {
+                key = record.account?.name || 'No Account';
+                sortValue = key.localeCompare('');
+            } else if (groupingDim === 'createdBy') {
+                key = record.created_by_user?.name || record.created_by_user?.email || 'Unknown User';
+                sortValue = key.localeCompare('');
+            }
 
-        if (!groups[key]) {
-            groups[key] = { items: [], sortValue };
-        }
-        groups[key].items.push(record);
-        return groups;
-    }, {});
+            if (!groups[key]) {
+                groups[key] = { items: [], sortValue };
+            }
+            groups[key].items.push(record);
+            return groups;
+        }, {});
+    }, [filteredRecords, groupingDim]);
 
     const sortedGroupKeys = Object.keys(groupedRecords).sort((a, b) => {
         if (groupingDim === 'month' || groupingDim === 'recordDate') {

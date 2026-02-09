@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Loader2, CheckCircle } from 'lucide-react';
 
-const Login = () => {
+const ResetPassword = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
     const [isDark, setIsDark] = useState(false);
 
     // 检测系统深色模式偏好
@@ -21,18 +21,34 @@ const Login = () => {
         return () => mediaQuery.removeEventListener('change', handleChange);
     }, []);
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
+        setSuccess(false);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        if (!email.trim()) {
+            setError('Please enter your email address');
+            return;
+        }
 
-        if (error) {
-            setError(error.message);
+        setLoading(true);
+
+        try {
+            const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/auth/confirm`,
+            });
+
+            if (resetError) {
+                setError(resetError.message);
+                setLoading(false);
+                return;
+            }
+
+            setSuccess(true);
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || 'Failed to send reset email');
+        } finally {
             setLoading(false);
         }
     };
@@ -51,52 +67,47 @@ const Login = () => {
                     </p>
                 </div>
 
-                <form onSubmit={handleLogin} className="login-form">
-                    <div className="input-group">
-                        <label>Email Address</label>
-                        <div className="input-wrapper">
-                            <Mail className="input-icon" size={20} />
-                            <input
-                                type="email"
-                                placeholder="name@company.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
+                {success ? (
+                    <div className="success-message">
+                        <CheckCircle size={48} color="#7C3AED" style={{ margin: '0 auto 1rem' }} />
+                        <h3>Check your email</h3>
+                        <p>We've sent a password reset link to {email}. Please check your inbox and click the link to reset your password.</p>
+                        <Link to="/login" className="login-link">
+                            <p>Back to <span>Sign In</span></p>
+                        </Link>
                     </div>
-
-                    <div className="input-group">
-                        <label>Password</label>
-                        <div className="input-wrapper">
-                            <Lock className="input-icon" size={20} />
-                            <input
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
+                ) : (
+                    <form onSubmit={handleResetPassword} className="login-form">
+                        <div className="input-group">
+                            <label>Email Address</label>
+                            <div className="input-wrapper">
+                                <Mail className="input-icon" size={20} />
+                                <input
+                                    type="email"
+                                    placeholder="name@company.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    autoComplete="email"
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    {error && <div className="error-message">{error}</div>}
+                        {error && <div className="error-message">{error}</div>}
 
-                    <button type="submit" className="login-btn" disabled={loading}>
-                        {loading ? (
-                            <Loader2 className="animate-spin" size={20} />
-                        ) : (
-                            'Sign In'
-                        )}
-                    </button>
-                </form>
+                        <button type="submit" className="login-btn" disabled={loading}>
+                            {loading ? (
+                                <Loader2 className="animate-spin" size={20} />
+                            ) : (
+                                'Send Reset Link'
+                            )}
+                        </button>
+                    </form>
+                )}
 
                 <div className="login-footer">
-                    <Link to="/reset-password" className="login-link">
-                        <p>Forgot password? <span>Reset It</span></p>
-                    </Link>
-                    <Link to="/register" className="login-link">
-                        <p>Don't have an account? <span>Sign Up</span></p>
+                    <Link to="/login" className="login-link">
+                        <p>Remember your password? <span>Sign In</span></p>
                     </Link>
                 </div>
             </div>
@@ -299,6 +310,34 @@ const Login = () => {
           border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
+        .success-message {
+          text-align: center;
+          padding: 1.5rem 0;
+        }
+
+        .success-message h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #0a0a0a;
+          margin-bottom: 0.75rem;
+          font-family: 'Poppins', sans-serif;
+        }
+
+        .login-page.dark .success-message h3 {
+          color: #ededed;
+        }
+
+        .success-message p {
+          color: #636e72;
+          font-size: 0.875rem;
+          line-height: 1.6;
+          margin-bottom: 1.5rem;
+        }
+
+        .login-page.dark .success-message p {
+          color: #94a3b8;
+        }
+
         .login-btn {
           margin-top: 1rem;
           padding: 1rem;
@@ -377,4 +416,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default ResetPassword;

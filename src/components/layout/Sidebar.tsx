@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Receipt,
   ArrowUpCircle,
   PackageSearch,
   PackageCheck,
-  LogOut,
   User,
-  Building2
+  Building2,
+  Settings,
+  Menu,
+  X
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { getCurrentUserInfo, getCurrentSpaceInfo, UserInfo, SpaceInfo } from '../../lib/auth-helper';
 
 import './Sidebar.css';
 
@@ -20,25 +23,38 @@ interface SidebarProps {
 
 const Sidebar = ({ user }: SidebarProps) => {
   const location = useLocation();
-  const [spaceName, setSpaceName] = useState('My Workspace');
+  const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [spaceInfo, setSpaceInfo] = useState<SpaceInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.user_metadata?.space_id) {
-      // Optimistically set if possible, or fetch
-      // Assuming metadata might have name, otherwise fetch
-      supabase
-        .from('spaces')
-        .select('name')
-        .eq('id', user.user_metadata.space_id)
-        .single()
-        .then(({ data }) => {
-          if (data?.name) setSpaceName(data.name);
-        });
-    }
-  }, [user]);
+    loadUserAndSpace();
+  }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const loadUserAndSpace = async () => {
+    try {
+      setLoading(true);
+      const [userData, spaceData] = await Promise.all([
+        getCurrentUserInfo(),
+        getCurrentSpaceInfo(),
+      ]);
+      setUserInfo(userData);
+      setSpaceInfo(spaceData);
+    } catch (error) {
+      console.error('Error loading user and space:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUserClick = () => {
+    navigate('/profile');
+  };
+
+  const handleSpaceClick = () => {
+    navigate('/space-manage');
   };
 
   const menuItems = [
@@ -50,22 +66,32 @@ const Sidebar = ({ user }: SidebarProps) => {
   ];
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      <button 
+        className="sidebar-toggle-btn"
+        onClick={() => setCollapsed(!collapsed)}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        {collapsed ? <Menu size={20} /> : <X size={20} />}
+      </button>
+
       <div className="sidebar-top">
         <div className="sidebar-logo">
-          <div className="logo-icon">V</div>
-          <span>Vouchap</span>
+          <img src="/logo.png" alt="Vouchap Logo" className="sidebar-logo-img" />
+          {!collapsed && <span className="sidebar-logo-text">Vouchap</span>}
         </div>
 
-        {user && (
-          <div className="sidebar-user-info">
-            <div className="user-item">
-              <User size={14} className="user-icon" />
-              <span className="user-text" title={user.email}>{user.email}</span>
-            </div>
-            <div className="user-item">
-              <Building2 size={14} className="user-icon" />
-              <span className="user-text">{spaceName}</span>
+        {/* Space Information - Top */}
+        {!collapsed && spaceInfo && (
+          <div className="sidebar-space-info" onClick={handleSpaceClick}>
+            <div className="info-name-row">
+              <div className="info-avatar space-avatar">
+                <Building2 size={14} />
+              </div>
+              <span className="info-name" title={spaceInfo.name}>
+                {spaceInfo.name}
+              </span>
+              <Settings size={16} className="info-manage-icon" />
             </div>
           </div>
         )}
@@ -77,18 +103,43 @@ const Sidebar = ({ user }: SidebarProps) => {
             key={item.path}
             to={item.path}
             className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+            title={collapsed ? item.label : ''}
           >
             <item.icon size={20} />
-            <span>{item.label}</span>
+            {!collapsed && <span>{item.label}</span>}
           </Link>
         ))}
       </nav>
 
-      <div className="sidebar-footer">
-        <button onClick={handleLogout} className="logout-btn">
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
+      <div className="sidebar-bottom-section">
+        {/* User Information - Bottom */}
+        {!collapsed && userInfo && (
+          <div className="sidebar-user-info-bottom" onClick={handleUserClick}>
+            <div className="info-name-row">
+              <div className="info-avatar user-avatar">
+                {userInfo.name ? (
+                  <span className="info-avatar-text">
+                    {userInfo.name.charAt(0).toUpperCase()}
+                  </span>
+                ) : (
+                  <User size={14} />
+                )}
+              </div>
+              <div className="info-content">
+                <span className="info-name" title={userInfo.email}>
+                  {userInfo.name || userInfo.email}
+                </span>
+                {userInfo.email && userInfo.name && (
+                  <span className="info-secondary" title={userInfo.email}>
+                    {userInfo.email}
+                  </span>
+                )}
+              </div>
+              <Settings size={16} className="info-manage-icon" />
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
