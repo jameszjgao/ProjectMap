@@ -26,10 +26,35 @@ const RecordsList = ({ type }: RecordsListProps) => {
     useEffect(() => {
         const fetchRecords = async () => {
             setLoading(true);
-            const { data, error } = await supabase
+            let query = supabase
                 .from(config[type].table)
                 .select('*')
                 .order('date', { ascending: false });
+
+            // Add relations based on type
+            if (type === 'expenditure') {
+                query = supabase
+                    .from(config[type].table)
+                    .select('*, supplier:supplier_id(name), supplierCustomer:supplier_customer_id(name), account:account_id(name)')
+                    .order('date', { ascending: false });
+            } else if (type === 'income') {
+                query = supabase
+                    .from(config[type].table)
+                    .select('*, customer:customer_id(name), customerSupplier:customer_supplier_id(name), account:account_id(name)')
+                    .order('date', { ascending: false });
+            } else if (type === 'inbound') {
+                query = supabase
+                    .from(config[type].table)
+                    .select('*, supplier:supplier_id(name)')
+                    .order('date', { ascending: false });
+            } else if (type === 'outbound') {
+                query = supabase
+                    .from(config[type].table)
+                    .select('*, customer:customer_id(name)')
+                    .order('date', { ascending: false });
+            }
+
+            const { data, error } = await query;
 
             if (data) setRecords(data);
             setLoading(false);
@@ -46,6 +71,18 @@ const RecordsList = ({ type }: RecordsListProps) => {
             case 'rejected': className = 'badge badge-danger'; break;
         }
         return <span className={className}>{status}</span>;
+    };
+
+    const getDisplayName = (record: any) => {
+        if (type === 'expenditure') {
+            return record.supplier?.name || record.supplierCustomer?.name || record.supplier_name || record.store_name || 'N/A';
+        } else if (type === 'income') {
+            return record.customer?.name || record.customerSupplier?.name || record.customer_name || 'N/A';
+        } else if (type === 'inbound') {
+            return record.supplier?.name || record.supplier_name || 'N/A';
+        } else {
+            return record.customer?.name || record.customer_name || 'N/A';
+        }
     };
 
     return (
@@ -91,7 +128,7 @@ const RecordsList = ({ type }: RecordsListProps) => {
                                 onClick={() => navigate(`/detail/${type}/${record.id}`)}
                             >
                                 <div className="record-name">
-                                    {record.store_name || record.customer_name || record.supplier_name || 'N/A'}
+                                    {getDisplayName(record)}
                                 </div>
                                 <div className="record-date">
                                     <Calendar size={14} />

@@ -72,6 +72,13 @@
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0;
+    /* Important for flex nesting */
+}
+
+.records-list {
+    overflow-y: auto;
+    flex: 1;
 }
 
 .records-header-row {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Save, ArrowLeft, Trash2, Plus,
-  Image as ImageIcon, X
+  Image as ImageIcon, X, Calculator
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './RecordDetail.css';
@@ -15,6 +15,11 @@ const RecordDetail = () => {
   const [record, setRecord] = useState<any>({});
   const [items, setItems] = useState<any[]>([]);
 
+  // Metadata state
+  const [categories, setCategories] = useState<any[]>([]);
+  const [purposes, setPurposes] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
+
   const config: any = {
     expenditure: { table: 'receipts', itemsTable: 'receipt_items', entityLabel: 'Store Name', entityField: 'store_name' },
     income: { table: 'invoices', itemsTable: 'invoice_items', entityLabel: 'Customer Name', entityField: 'customer_name' },
@@ -26,44 +31,89 @@ const RecordDetail = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!type || !id || id === 'new') {
-        setRecord({ date: new Date().toISOString().split('T')[0], status: 'pending' });
+      try {
+        // Fetch metadata in parallel
+        const [cats, purps, accs] = await Promise.all([
+          supabase.from('categories').select('*'),
+          supabase.from('purposes').select('*'),
+          supabase.from('accounts').select('*')
+        ]);
+
+        if (cats.data) setCategories(cats.data);
+        if (purps.data) setPurposes(purps.data);
+        if (accs.data) setAccounts(accs.data);
+
+        if (!type || !id || id === 'new') {
+          setRecord({
+            date: new Date().toISOString().split('T')[0],
+            status: 'pending',
+            items: [],
+            tax: 0,
+            total_amount: 0
+          });
+          setLoading(false);
+          return;
+        }
+
+        const { data: recordData, error } = await supabase
+          .from(currentConfig.table)
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+        setRecord(recordData);
+
+        // Fetch items
+        // Depending on table, the foreign key might differ clearly
+        const foreignKey = type === 'expenditure' ? 'receipt_id' :
+          type === 'income' ? 'invoice_id' :
+            type === 'inbound' ? 'inbound_id' : 'outbound_id';
+
+        const { data: itemsData } = await supabase
+          .from(currentConfig.itemsTable)
+          .select('*')
+          .eq(foreignKey, id);
+
+        if (itemsData) setItems(itemsData);
+
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const { data: recordData, error } = await supabase
-        .from(currentConfig.table)
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching record:', error);
-        return;
-      }
-
-      setRecord(recordData);
-
-      // Fetch items if applicable
-      const { data: itemsData } = await supabase
-        .from(currentConfig.itemsTable)
-        .select('*')
-        .eq(type === 'expenditure' ? 'receipt_id' : type === 'income' ? 'invoice_id' : type === 'inbound' ? 'inbound_id' : 'outbound_id', id);
-
-      if (itemsData) setItems(itemsData);
-
-      setLoading(false);
     };
 
     fetchData();
   }, [type, id]);
 
+  const calculateTotal = (currentItems: any[], currentTax: number) => {
+    const itemsSum = currentItems.reduce((sum, item) => {
+      const price = item.price || item.unit_price || 0;
+      return sum + (price * (item.quantity || 1));
+    }, 0);
+    return itemsSum + (currentTax || 0);
+  };
+
   const handleSave = async () => {
     setSaving(true);
-    // Logic for save/update (omitted for brevity, assume works)
-    setSaving(false);
-    alert('Save functionality to be implemented fully.');
+    try {
+      // Update main record
+      const { error: mainError } = await supabase
+        .from(currentConfig.table)
+        .upsert({ ...record, id: id === 'new' ? undefined : id }); // Handle new vs update
+
+      if (mainError) throw mainError;
+
+      // For items, simplistic approach: delete all and insert all (or intelligent merge)
+      // Here we just alerting as real implementation needs care with IDs
+      alert('Main record saved. Item syncing logic to be refined.');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to save');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -74,22 +124,46 @@ const RecordDetail = () => {
   };
 
   const handleChange = (field: string, value: any) => {
-    setRecord({ ...record, [field]: value });
+    const updatedRecord = { ...record, [field]: value };
+
+    // Auto-recalculate if tax changes
+    if (field === 'tax') {
+      const newTotal = calculateTotal(items, parseFloat(value) || 0);
+      updatedRecord.total_amount = newTotal;
+    }
+
+    setRecord(updatedRecord);
   };
 
   const handleItemChange = (index: number, field: string, value: any) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     setItems(newItems);
+
+    // Auto-recalculate total
+    if (field === 'price' || field === 'unit_price' || field === 'quantity') {
+      const newTotal = calculateTotal(newItems, record.tax || 0);
+      setRecord(prev => ({ ...prev, total_amount: newTotal }));
+    }
   };
 
   const addItem = () => {
-    setItems([...items, { name: '', quantity: 1, price: 0 }]);
+    const newItem = {
+      name: '',
+      quantity: 1,
+      price: 0,
+      category_id: categories[0]?.id,
+      purpose_id: purposes[0]?.id
+    };
+    const newItems = [...items, newItem];
+    setItems(newItems);
   };
 
   const removeItem = (index: number) => {
     const newItems = items.filter((_, i) => i !== index);
     setItems(newItems);
+    const newTotal = calculateTotal(newItems, record.tax || 0);
+    setRecord(prev => ({ ...prev, total_amount: newTotal }));
   };
 
   if (loading) return <div className="loading-container"><div className="loader"></div></div>;
@@ -126,6 +200,7 @@ const RecordDetail = () => {
 
         <div className="summary-content">
           <div>
+            <label className="field-label">Store / Supplier</label>
             <input
               type="text"
               className="store-name-input"
@@ -133,24 +208,52 @@ const RecordDetail = () => {
               value={record[currentConfig.entityField] || ''}
               onChange={(e) => handleChange(currentConfig.entityField, e.target.value)}
             />
-            <div className="amount-input-group">
-              <span className="currency-symbol">$</span>
-              <input
-                type="number"
-                className="amount-input"
-                placeholder="0.00"
-                value={record.total_amount || ''}
-                onChange={(e) => handleChange('total_amount', e.target.value)}
-              />
+
+            <div className="form-row">
+              <div className="field-group">
+                <label className="field-label">Date</label>
+                <input
+                  type="date"
+                  className="date-input"
+                  value={record.date || ''}
+                  onChange={(e) => handleChange('date', e.target.value)}
+                />
+              </div>
+              <div className="field-group">
+                <label className="field-label">Account</label>
+                <select
+                  className="select-input"
+                  value={record.account_id || ''}
+                  onChange={(e) => handleChange('account_id', e.target.value)}
+                >
+                  <option value="">Select Account</option>
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>{acc.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-          <div className="date-input-container">
-            <input
-              type="date"
-              className="date-input"
-              value={record.date || ''}
-              onChange={(e) => handleChange('date', e.target.value)}
-            />
+
+            <div className="stats-row">
+              <div className="stat-item">
+                <label>Tax</label>
+                <div className="input-with-prefix">
+                  <span>$</span>
+                  <input
+                    type="number"
+                    value={record.tax || 0}
+                    onChange={(e) => handleChange('tax', e.target.value)}
+                    className="stat-input"
+                  />
+                </div>
+              </div>
+              <div className="stat-item total">
+                <label>Total Amount</label>
+                <div className="amount-display">
+                  ${Number(record.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -163,10 +266,12 @@ const RecordDetail = () => {
         <table className="items-table">
           <thead>
             <tr>
-              <th style={{ width: '50%' }}>Item Name</th>
-              <th style={{ width: '20%', textAlign: 'right' }}>Qty</th>
-              <th style={{ width: '20%', textAlign: 'right' }}>Price</th>
-              <th style={{ width: '10%' }}></th>
+              <th style={{ width: '30%' }}>Item Name</th>
+              <th style={{ width: '20%' }}>Category</th>
+              <th style={{ width: '20%' }}>Purpose</th>
+              <th style={{ width: '10%', textAlign: 'right' }}>Qty</th>
+              <th style={{ width: '15%', textAlign: 'right' }}>Price</th>
+              <th style={{ width: '5%' }}></th>
             </tr>
           </thead>
           <tbody>
@@ -180,6 +285,30 @@ const RecordDetail = () => {
                     onChange={(e) => handleItemChange(idx, item.name !== undefined ? 'name' : 'product_name', e.target.value)}
                     placeholder="Item name"
                   />
+                </td>
+                <td>
+                  <select
+                    className="table-select"
+                    value={item.category_id || ''}
+                    onChange={(e) => handleItemChange(idx, 'category_id', e.target.value)}
+                  >
+                    <option value="">Category</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <select
+                    className="table-select"
+                    value={item.purpose_id || ''}
+                    onChange={(e) => handleItemChange(idx, 'purpose_id', e.target.value)}
+                  >
+                    <option value="">Purpose</option>
+                    {purposes.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   <input

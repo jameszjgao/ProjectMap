@@ -253,3 +253,144 @@
 .add-item-btn:hover {
     background-color: #E2E8F0;
 }
+
+/* Form Layouts */
+.form-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.field-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.select-input,
+.date-input {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-input-bg);
+    color: var(--color-text-main);
+    font-size: 0.9375rem;
+    outline: none;
+    transition: all 0.2s;
+    appearance: none;
+}
+
+.select-input:focus,
+.date-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+/* Stats Row */
+.stats-row {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px dotted var(--color-border);
+    justify-content: flex-end;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-item.total {
+    align-items: flex-end;
+}
+
+.stat-item label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.input-with-prefix {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.stat-input {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    text-align: right;
+    background: var(--color-bg);
+    color: var(--color-text-main);
+    font-weight: 600;
+}
+
+.amount-display {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    letter-spacing: -0.02em;
+}
+
+/* Table Inputs */
+.table-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: var(--color-text-main);
+    cursor: pointer;
+}
+
+.table-select:hover {
+    background-color: var(--color-input-bg);
+}
+
+.table-select:focus {
+    border-color: var(--color-primary);
+    background-color: var(--color-bg);
+    outline: none;
+}
+
+/* Price/Qty Inputs inside table */
+.items-table .qty-input,
+.items-table .price-input {
+    border: 1px solid transparent;
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 0.875rem;
+    color: var(--color-text-main);
+    transition: all 0.2s;
+}
+
+.items-table .qty-input:hover,
+.items-table .price-input:hover {
+    background-color: var(--color-input-bg);
+}
+
+.items-table .qty-input:focus,
+.items-table .price-input:focus {
+    border-color: var(--color-border);
+    background-color: var(--color-bg);
+    outline: none;
+}
