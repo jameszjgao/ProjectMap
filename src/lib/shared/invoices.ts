@@ -513,11 +513,11 @@ export async function saveInvoice(invoice: Invoice, autoResolveDuplicate: boolea
           if (autoResolveDuplicate) {
             // 后台处理场景：自动使用已存在的客户/供应商ID
             if (foundByName.source === 'supplier') {
-              customerSupplierId = targetId as any;
-              customerId = undefined;
+              customerSupplierId = targetId ?? null;
+              customerId = null;
             } else {
-              customerId = targetId;
-              customerSupplierId = undefined;
+              customerId = targetId ?? null;
+              customerSupplierId = null;
             }
             console.log(`客户/供应商名称已存在，自动使用已存在的ID: ${foundByName.source} ${targetId}`);
           } else {
@@ -552,7 +552,7 @@ export async function saveInvoice(invoice: Invoice, autoResolveDuplicate: boolea
       } else if (customerId) {
         try {
           const targetId = await resolveCustomerId(spaceId, customerId);
-          await updateCustomer(targetId, { name: trimmedCustomerName });
+          if (targetId) await updateCustomer(targetId, { name: trimmedCustomerName });
         } catch (e) {
           if (e instanceof Error && e.message === '客户名称已存在') {
             // 如果 autoResolveDuplicate = true，静默处理，不抛出异常

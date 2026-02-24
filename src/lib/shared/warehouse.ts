@@ -10,6 +10,7 @@ function mapWarehouseRow(row: any): Warehouse {
     name: row.name,
     code: row.code ?? undefined,
     address: row.address ?? undefined,
+    isAiRecognized: row.is_ai_recognized ?? false,
     mergedIntoId: row.merged_into_id ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

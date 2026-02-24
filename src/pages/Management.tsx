@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Tags, Briefcase, Wallet, Settings, LogOut, SwapHorizontal } from 'lucide-react';
+import { Users, Tags, Briefcase, Wallet, Settings, LogOut, ArrowRightLeft } from 'lucide-react';
 import { getCurrentUserInfo, getCurrentSpaceInfo } from '../lib/auth-helper';
 import { supabase } from '../lib/supabase';
 import './Management.css';
@@ -96,7 +96,7 @@ export default function Management() {
 
       <div className="management-bottom">
         <button type="button" className="management-btn management-btn-switch" onClick={() => navigate('/space-manage')}>
-          <SwapHorizontal size={20} /> Switch Space
+          <ArrowRightLeft size={20} /> Switch Space
         </button>
         <button type="button" className="management-btn management-btn-signout" onClick={handleSignOut}>
           <LogOut size={20} /> Sign Out

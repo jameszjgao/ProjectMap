@@ -158,6 +158,7 @@ export interface Warehouse {
   name: string;
   code?: string;
   address?: string;
+  isAiRecognized?: boolean;
   /** 合并指向：已并入的目标仓库 ID，NULL 表示未被合并 */
   mergedIntoId?: string | null;
   createdAt?: string;

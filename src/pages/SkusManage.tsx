@@ -40,7 +40,7 @@ export default function SkusManage() {
   const [showDeleteSelectedModal, setShowDeleteSelectedModal] = useState(false);
   const [deleteSelectedModalSkus, setDeleteSelectedModalSkus] = useState<Sku[] | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = (message: string, duration: number = 1500) => {
     if (toastTimeoutRef.current) {

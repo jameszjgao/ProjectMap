@@ -3,7 +3,7 @@
  * 将移动端的 React Native 组件适配到 Web 环境
  */
 
-// 导出 react-native-web 的组件
+// 导出 react-native-web 的组件（不导出 Alert，下方提供 Web 适配实现）
 export {
   View,
   Text,
@@ -19,7 +19,6 @@ export {
   Image,
   Pressable,
   Switch,
-  Alert,
   Platform,
 } from 'react-native-web';
 

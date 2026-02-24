@@ -175,7 +175,7 @@ export async function saveReceipt(receipt: Receipt): Promise<string> {
 
           // 尝试按优先级查找默认分类
           const defaultCategoryNames = ['购物', '食品', 'Other', 'Grocery'];
-          let defaultCategory = null;
+          let defaultCategory: Awaited<ReturnType<typeof findCategoryByName>> = null;
 
           for (const defaultName of defaultCategoryNames) {
             defaultCategory = await findCategoryByName(defaultName);
@@ -292,11 +292,11 @@ export async function updateReceipt(receiptId: string, receipt: Partial<Receipt>
           if (autoResolveDuplicate) {
             // 后台处理场景：自动使用已存在的供应商/客户ID
             if (foundByName.source === 'supplier') {
-              supplierId = targetId;
+              supplierId = targetId ?? undefined;
               supplierCustomerId = undefined; // 清除 customerId，确保只关联 supplier
             } else {
               // foundByName.source === 'customer'
-              supplierCustomerId = targetId;
+              supplierCustomerId = targetId ?? undefined;
               supplierId = undefined; // 清除 supplierId，确保只关联 customer
             }
             // 继续执行，不抛出异常
@@ -318,7 +318,7 @@ export async function updateReceipt(receiptId: string, receipt: Partial<Receipt>
       if (supplierCustomerId) {
         try {
           const targetId = await resolveCustomerId(spaceId, supplierCustomerId);
-          await updateCustomer(targetId, { name: trimmedSupplierName });
+          if (targetId) await updateCustomer(targetId, { name: trimmedSupplierName });
         } catch (e) {
           if (e instanceof Error && e.message === '客户名称已存在') {
             // 如果 autoResolveDuplicate = true，静默处理，不抛出异常
@@ -643,27 +643,27 @@ export async function getAllReceiptsForList(): Promise<Receipt[]> {
         supplierCustomerId: row.supplier_customer_id ?? undefined,
         supplier: supplierRow ? {
           id: supplierRow.id,
-          spaceId: supplierRow.space_id,
+          spaceId: (supplierRow as { spaceId?: string; space_id?: string }).spaceId ?? (supplierRow as any).space_id,
           name: supplierRow.name,
-          taxNumber: supplierRow.tax_number,
+          taxNumber: (supplierRow as { taxNumber?: string; tax_number?: string }).taxNumber ?? (supplierRow as any).tax_number,
           phone: supplierRow.phone,
           address: supplierRow.address,
-          isAiRecognized: supplierRow.is_ai_recognized,
-          isCustomer: (supplierRow as any).is_customer ?? false,
-          createdAt: supplierRow.created_at,
-          updatedAt: supplierRow.updated_at,
+          isAiRecognized: (supplierRow as { isAiRecognized?: boolean; is_ai_recognized?: boolean }).isAiRecognized ?? (supplierRow as any).is_ai_recognized,
+          isCustomer: (supplierRow as any).is_customer ?? (supplierRow as any).isCustomer ?? false,
+          createdAt: (supplierRow as { createdAt?: string; created_at?: string }).createdAt ?? (supplierRow as any).created_at,
+          updatedAt: (supplierRow as { updatedAt?: string; updated_at?: string }).updatedAt ?? (supplierRow as any).updated_at,
         } : undefined,
         supplierCustomer: customerRow ? {
           id: customerRow.id,
-          spaceId: customerRow.space_id,
+          spaceId: (customerRow as { spaceId?: string; space_id?: string }).spaceId ?? (customerRow as any).space_id,
           name: customerRow.name,
-          taxNumber: customerRow.tax_number,
+          taxNumber: (customerRow as { taxNumber?: string; tax_number?: string }).taxNumber ?? (customerRow as any).tax_number,
           phone: customerRow.phone,
           address: customerRow.address,
-          isAiRecognized: customerRow.is_ai_recognized,
-          isSupplier: customerRow.is_supplier || false,
-          createdAt: customerRow.created_at,
-          updatedAt: customerRow.updated_at,
+          isAiRecognized: (customerRow as { isAiRecognized?: boolean; is_ai_recognized?: boolean }).isAiRecognized ?? (customerRow as any).is_ai_recognized,
+          isSupplier: (customerRow as any).is_supplier ?? (customerRow as any).isSupplier ?? false,
+          createdAt: (customerRow as { createdAt?: string; created_at?: string }).createdAt ?? (customerRow as any).created_at,
+          updatedAt: (customerRow as { updatedAt?: string; updated_at?: string }).updatedAt ?? (customerRow as any).updated_at,
         } : undefined,
         totalAmount: row.total_amount,
         currency: row.currency,
@@ -672,11 +672,11 @@ export async function getAllReceiptsForList(): Promise<Receipt[]> {
         accountId: row.account_id,
         account: accountRow ? {
           id: accountRow.id,
-          spaceId: accountRow.space_id,
+          spaceId: (accountRow as { spaceId?: string; space_id?: string }).spaceId ?? (accountRow as any).space_id,
           name: accountRow.name,
-          isAiRecognized: accountRow.is_ai_recognized,
-          createdAt: accountRow.created_at,
-          updatedAt: accountRow.updated_at,
+          isAiRecognized: (accountRow as { isAiRecognized?: boolean; is_ai_recognized?: boolean }).isAiRecognized ?? (accountRow as any).is_ai_recognized,
+          createdAt: (accountRow as { createdAt?: string; created_at?: string }).createdAt ?? (accountRow as any).created_at,
+          updatedAt: (accountRow as { updatedAt?: string; updated_at?: string }).updatedAt ?? (accountRow as any).updated_at,
         } : undefined,
         status: row.status as ReceiptStatus,
         imageUrl: row.image_url,
@@ -846,27 +846,27 @@ export async function getAllReceipts(): Promise<Receipt[]> {
         supplierCustomerId: row.supplier_customer_id ?? undefined,
         supplier: supplierRow ? {
           id: supplierRow.id,
-          spaceId: supplierRow.space_id,
+          spaceId: (supplierRow as { spaceId?: string; space_id?: string }).spaceId ?? (supplierRow as any).space_id,
           name: supplierRow.name,
-          taxNumber: supplierRow.tax_number,
+          taxNumber: (supplierRow as { taxNumber?: string; tax_number?: string }).taxNumber ?? (supplierRow as any).tax_number,
           phone: supplierRow.phone,
           address: supplierRow.address,
-          isAiRecognized: supplierRow.is_ai_recognized,
-          isCustomer: (supplierRow as any).is_customer ?? false,
-          createdAt: supplierRow.created_at,
-          updatedAt: supplierRow.updated_at,
+          isAiRecognized: (supplierRow as { isAiRecognized?: boolean; is_ai_recognized?: boolean }).isAiRecognized ?? (supplierRow as any).is_ai_recognized,
+          isCustomer: (supplierRow as any).is_customer ?? (supplierRow as any).isCustomer ?? false,
+          createdAt: (supplierRow as { createdAt?: string; created_at?: string }).createdAt ?? (supplierRow as any).created_at,
+          updatedAt: (supplierRow as { updatedAt?: string; updated_at?: string }).updatedAt ?? (supplierRow as any).updated_at,
         } : undefined,
         supplierCustomer: customerRow ? {
           id: customerRow.id,
-          spaceId: customerRow.space_id,
+          spaceId: (customerRow as { spaceId?: string; space_id?: string }).spaceId ?? (customerRow as any).space_id,
           name: customerRow.name,
-          taxNumber: customerRow.tax_number,
+          taxNumber: (customerRow as { taxNumber?: string; tax_number?: string }).taxNumber ?? (customerRow as any).tax_number,
           phone: customerRow.phone,
           address: customerRow.address,
-          isAiRecognized: customerRow.is_ai_recognized,
-          isSupplier: customerRow.is_supplier || false,
-          createdAt: customerRow.created_at,
-          updatedAt: customerRow.updated_at,
+          isAiRecognized: (customerRow as { isAiRecognized?: boolean; is_ai_recognized?: boolean }).isAiRecognized ?? (customerRow as any).is_ai_recognized,
+          isSupplier: (customerRow as any).is_supplier ?? (customerRow as any).isSupplier ?? false,
+          createdAt: (customerRow as { createdAt?: string; created_at?: string }).createdAt ?? (customerRow as any).created_at,
+          updatedAt: (customerRow as { updatedAt?: string; updated_at?: string }).updatedAt ?? (customerRow as any).updated_at,
         } : undefined,
         totalAmount: row.total_amount,
         currency: row.currency,
@@ -875,11 +875,11 @@ export async function getAllReceipts(): Promise<Receipt[]> {
         accountId: row.account_id,
         account: accountRow ? {
           id: accountRow.id,
-          spaceId: accountRow.space_id,
+          spaceId: (accountRow as { spaceId?: string; space_id?: string }).spaceId ?? (accountRow as any).space_id,
           name: accountRow.name,
-          isAiRecognized: accountRow.is_ai_recognized,
-          createdAt: accountRow.created_at,
-          updatedAt: accountRow.updated_at,
+          isAiRecognized: (accountRow as { isAiRecognized?: boolean; is_ai_recognized?: boolean }).isAiRecognized ?? (accountRow as any).is_ai_recognized,
+          createdAt: (accountRow as { createdAt?: string; created_at?: string }).createdAt ?? (accountRow as any).created_at,
+          updatedAt: (accountRow as { updatedAt?: string; updated_at?: string }).updatedAt ?? (accountRow as any).updated_at,
         } : undefined,
         status: row.status as ReceiptStatus,
         imageUrl: row.image_url,
@@ -1112,27 +1112,27 @@ export async function getReceiptById(receiptId: string): Promise<Receipt | null>
       supplierCustomerId: data.supplier_customer_id ?? undefined,
       supplier: supplierRow ? {
         id: supplierRow.id,
-        spaceId: supplierRow.space_id,
+        spaceId: supplierRow.spaceId,
         name: supplierRow.name,
-        taxNumber: supplierRow.tax_number,
+        taxNumber: supplierRow.taxNumber,
         phone: supplierRow.phone,
         address: supplierRow.address,
-        isAiRecognized: supplierRow.is_ai_recognized,
-        isCustomer: (supplierRow as any).is_customer ?? false,
-        createdAt: supplierRow.created_at,
-        updatedAt: supplierRow.updated_at,
+        isAiRecognized: supplierRow.isAiRecognized,
+        isCustomer: supplierRow.isCustomer ?? false,
+        createdAt: supplierRow.createdAt,
+        updatedAt: supplierRow.updatedAt,
       } : undefined,
       supplierCustomer: customerRow ? {
         id: customerRow.id,
-        spaceId: customerRow.space_id,
+        spaceId: customerRow.spaceId,
         name: customerRow.name,
-        taxNumber: customerRow.tax_number,
+        taxNumber: customerRow.taxNumber,
         phone: customerRow.phone,
         address: customerRow.address,
-        isAiRecognized: customerRow.is_ai_recognized,
-        isSupplier: customerRow.is_supplier || false,
-        createdAt: customerRow.created_at,
-        updatedAt: customerRow.updated_at,
+        isAiRecognized: customerRow.isAiRecognized,
+        isSupplier: customerRow.isSupplier || false,
+        createdAt: customerRow.createdAt,
+        updatedAt: customerRow.updatedAt,
       } : undefined,
       totalAmount: data.total_amount,
       currency: data.currency,
@@ -1141,11 +1141,11 @@ export async function getReceiptById(receiptId: string): Promise<Receipt | null>
       accountId: data.account_id,
       account: accountRow ? {
         id: accountRow.id,
-        spaceId: accountRow.space_id,
+        spaceId: accountRow.spaceId,
         name: accountRow.name,
-        isAiRecognized: accountRow.is_ai_recognized,
-        createdAt: accountRow.created_at,
-        updatedAt: accountRow.updated_at,
+        isAiRecognized: accountRow.isAiRecognized,
+        createdAt: accountRow.createdAt,
+        updatedAt: accountRow.updatedAt,
       } : undefined,
       status: data.status as ReceiptStatus,
       imageUrl: data.image_url,

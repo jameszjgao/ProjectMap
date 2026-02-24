@@ -61,7 +61,7 @@ export default function SuppliersManage() {
   const [showDeleteSelectedModal, setShowDeleteSelectedModal] = useState(false);
   const [deleteSelectedModalSuppliers, setDeleteSelectedModalSuppliers] = useState<Supplier[] | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = (message: string, duration: number = 1500) => {
     if (toastTimeoutRef.current) {
