@@ -86,7 +86,7 @@ const Dashboard = () => {
                         <TrendingDown size={24} />
                     </div>
                     <div className="stat-info">
-                        <label>Total Expenditure</label>
+                        <label>Total Expenses</label>
                         <h3>${stats.expenditure.toLocaleString()}</h3>
                         <span className="trend positive">
                             <ChevronDown size={16} /> 12% vs last month

@@ -1,0 +1,115 @@
+.manage-list-page .manage-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.manage-list-page .manage-list-header h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text-main);
+}
+
+.manage-list-form {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.manage-list-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.manage-list-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.manage-list-color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.manage-list-color-dot:hover {
+  border-color: var(--color-text-main);
+}
+
+.manage-list-form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.manage-list-loading {
+  color: var(--color-text-muted);
+  margin: 1rem 0;
+}
+
+.manage-list-ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.manage-list-li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.manage-list-item-name {
+  flex: 1;
+  min-width: 0;
+  padding-left: 0.5rem;
+  border-left: 3px solid var(--color-border);
+  font-weight: 500;
+  color: var(--color-text-main);
+}
+
+.manage-list-btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-main);
+  cursor: pointer;
+}
+
+.manage-list-btn.danger {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.manage-list-btn:hover {
+  background: var(--color-input-bg);
+}
+
+.manage-list-meta {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.manage-list-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: 6px;
+}

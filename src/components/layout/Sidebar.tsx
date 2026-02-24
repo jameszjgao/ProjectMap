@@ -10,7 +10,15 @@ import {
   Building2,
   Settings,
   Menu,
-  X
+  X,
+  Network,
+  Box,
+  Tags,
+  Briefcase,
+  Wallet,
+  Users,
+  Store,
+  Package,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentUserInfo, getCurrentSpaceInfo, UserInfo, SpaceInfo } from '../../lib/auth-helper';
@@ -21,16 +29,51 @@ interface SidebarProps {
   user?: any;
 }
 
+// 与移动端 index + AI Inventory + Management 一一对应
+const mainMenuItems = [
+  { path: '/', icon: LayoutDashboard, label: 'Home' },
+  { path: '/expenditure', icon: Receipt, label: 'Expenses' },
+  { path: '/income', icon: ArrowUpCircle, label: 'Income' },
+  { path: '/inbound', icon: PackageSearch, label: 'Inbound' },
+  { path: '/outbound', icon: PackageCheck, label: 'Outbound' },
+  { path: '/ai-inventory', icon: Box, label: 'AI Inventory' },
+  { path: '/management', icon: Settings, label: 'Management' },
+  { path: '/project-map', icon: Network, label: 'Project Map' },
+];
+
+// Management 子项（与移动端 management 页 menuItems 一致）
+const managementSubItems = [
+  { path: '/space-members', icon: Users, label: 'Members' },
+  { path: '/categories-manage', icon: Tags, label: 'Categories' },
+  { path: '/purposes-manage', icon: Briefcase, label: 'Purposes' },
+  { path: '/accounts-manage', icon: Wallet, label: 'Accounts' },
+  { path: '/suppliers-manage', icon: Store, label: 'Suppliers' },
+  { path: '/customers-manage', icon: Users, label: 'Customers' },
+  { path: '/warehouse-manage', icon: Package, label: 'Warehouse' },
+  { path: '/skus-manage', icon: Box, label: 'SKU' },
+];
+
 const Sidebar = ({ user }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  const [managementOpen, setManagementOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [spaceInfo, setSpaceInfo] = useState<SpaceInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadUserAndSpace();
+  }, []);
+
+  useEffect(() => {
+    loadUserAndSpace();
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const onSpaceChanged = () => loadUserAndSpace();
+    window.addEventListener('space-changed', onSpaceChanged);
+    return () => window.removeEventListener('space-changed', onSpaceChanged);
   }, []);
 
   const loadUserAndSpace = async () => {
@@ -49,25 +92,21 @@ const Sidebar = ({ user }: SidebarProps) => {
     }
   };
 
-  const handleUserClick = () => {
-    navigate('/profile');
-  };
+  const handleUserClick = () => navigate('/profile');
+  const handleSpaceClick = () => navigate('/space-manage');
 
-  const handleSpaceClick = () => {
-    navigate('/space-manage');
+  const isManagementActive = managementSubItems.some(
+    (item) => location.pathname === item.path
+  );
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    if (path === '/project-map') return location.pathname.startsWith('/project-map');
+    return location.pathname === path;
   };
-
-  const menuItems = [
-    { path: '/', icon: LayoutDashboard, label: 'BI Dashboard' },
-    { path: '/expenditure', icon: Receipt, label: 'Expenditure' },
-    { path: '/income', icon: ArrowUpCircle, label: 'Income' },
-    { path: '/inbound', icon: PackageSearch, label: 'Inbound' },
-    { path: '/outbound', icon: PackageCheck, label: 'Outbound' },
-  ];
 
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <button 
+      <button
         className="sidebar-toggle-btn"
         onClick={() => setCollapsed(!collapsed)}
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -81,7 +120,6 @@ const Sidebar = ({ user }: SidebarProps) => {
           {!collapsed && <span className="sidebar-logo-text">Vouchap</span>}
         </div>
 
-        {/* Space Information - Top */}
         {!collapsed && spaceInfo && (
           <div className="sidebar-space-info" onClick={handleSpaceClick}>
             <div className="info-name-row">
@@ -98,21 +136,59 @@ const Sidebar = ({ user }: SidebarProps) => {
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map((item) => (
+        {mainMenuItems
+          .filter((item) => item.path !== '/management')
+          .map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
+              title={collapsed ? item.label : ''}
+            >
+              <item.icon size={20} />
+              {!collapsed && <span>{item.label}</span>}
+            </Link>
+          ))}
+
+        {/* Management 可展开子菜单 */}
+        {!collapsed ? (
+          <div className="nav-group">
+            <button
+              type="button"
+              className={`nav-item nav-item-expandable ${isManagementActive || location.pathname === '/management' ? 'active' : ''}`}
+              onClick={() => setManagementOpen(!managementOpen)}
+            >
+              <Settings size={20} />
+              <span>Management</span>
+              <span className={`expand-chevron ${managementOpen ? 'open' : ''}`}>▼</span>
+            </button>
+            {managementOpen && (
+              <div className="nav-sub">
+                {managementSubItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`nav-item nav-sub-item ${location.pathname === item.path ? 'active' : ''}`}
+                  >
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
           <Link
-            key={item.path}
-            to={item.path}
-            className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
-            title={collapsed ? item.label : ''}
+            to="/management"
+            className={`nav-item ${location.pathname === '/management' ? 'active' : ''}`}
+            title="Management"
           >
-            <item.icon size={20} />
-            {!collapsed && <span>{item.label}</span>}
+            <Settings size={20} />
           </Link>
-        ))}
+        )}
       </nav>
 
       <div className="sidebar-bottom-section">
-        {/* User Information - Bottom */}
         {!collapsed && userInfo && (
           <div className="sidebar-user-info-bottom" onClick={handleUserClick}>
             <div className="info-name-row">
@@ -139,7 +215,6 @@ const Sidebar = ({ user }: SidebarProps) => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

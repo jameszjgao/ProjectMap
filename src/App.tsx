@@ -1,5 +1,6 @@
 import { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ReactFlowProvider } from '@xyflow/react';
 import { supabase } from './lib/supabase';
 import './App.css';
 
@@ -14,8 +15,26 @@ const RecordsList = lazy(() => import('./pages/RecordsList'));
 const RecordDetail = lazy(() => import('./pages/RecordDetail'));
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const SpaceManage = lazy(() => import('./pages/SpaceManage'));
+const ProjectMap = lazy(() => import('./pages/ProjectMap'));
+const MindMapEditor = lazy(() => import('./pages/MindMapEditor'));
 const Sidebar = lazy(() => import('./components/layout/Sidebar'));
 const Header = lazy(() => import('./components/layout/Header'));
+const AiInventory = lazy(() => import('./pages/AiInventory'));
+const Management = lazy(() => import('./pages/Management'));
+const CategoriesManage = lazy(() => import('./pages/CategoriesManage'));
+const PurposesManage = lazy(() => import('./pages/PurposesManage'));
+const AccountsManage = lazy(() => import('./pages/AccountsManage'));
+const SuppliersManage = lazy(() => import('./pages/SuppliersManage'));
+const CustomersManage = lazy(() => import('./pages/CustomersManage'));
+const WarehouseManage = lazy(() => import('./pages/WarehouseManage'));
+const SkusManage = lazy(() => import('./pages/SkusManage'));
+const SpaceMembers = lazy(() => import('./pages/SpaceMembers'));
+const ManualEntry = lazy(() => import('./pages/ManualEntry'));
+const VoiceInput = lazy(() => import('./pages/VoiceInput'));
+const SpaceSelect = lazy(() => import('./pages/SpaceSelect'));
+const SetupSpace = lazy(() => import('./pages/SetupSpace'));
+const HandleInvitations = lazy(() => import('./pages/HandleInvitations'));
+const Invite = lazy(() => import('./pages/Invite'));
 
 function App() {
     const [session, setSession] = useState<any>(null);
@@ -86,12 +105,35 @@ function App() {
                                     <Routes>
                                         <Route path="/" element={<Dashboard />} />
                                         <Route path="/expenditure" element={<RecordsList type="expenditure" />} />
+                                        <Route path="/expenses" element={<RecordsList type="expenditure" />} />
                                         <Route path="/income" element={<RecordsList type="income" />} />
                                         <Route path="/inbound" element={<RecordsList type="inbound" />} />
                                         <Route path="/outbound" element={<RecordsList type="outbound" />} />
+                                        <Route path="/ai-inventory" element={<AiInventory />} />
+                                        <Route path="/management" element={<Management />} />
+                                        <Route path="/categories-manage" element={<CategoriesManage />} />
+                                        <Route path="/purposes-manage" element={<PurposesManage />} />
+                                        <Route path="/accounts-manage" element={<AccountsManage />} />
+                                        <Route path="/suppliers-manage" element={<SuppliersManage />} />
+                                        <Route path="/customers-manage" element={<CustomersManage />} />
+                                        <Route path="/warehouse-manage" element={<WarehouseManage />} />
+                                        <Route path="/skus-manage" element={<SkusManage />} />
+                                        <Route path="/space-members" element={<SpaceMembers />} />
                                         <Route path="/detail/:type/:id" element={<RecordDetail />} />
+                                        <Route path="/receipt-details/:id" element={<RecordDetail />} />
+                                        <Route path="/invoice-details/:id" element={<RecordDetail />} />
+                                        <Route path="/inbound-details/:id" element={<RecordDetail />} />
+                                        <Route path="/outbound-details/:id" element={<RecordDetail />} />
+                                        <Route path="/manual-entry" element={<ManualEntry />} />
+                                        <Route path="/voice-input" element={<VoiceInput />} />
+                                        <Route path="/space-select" element={<SpaceSelect />} />
+                                        <Route path="/setup-space" element={<SetupSpace />} />
+                                        <Route path="/handle-invitations" element={<HandleInvitations />} />
+                                        <Route path="/invite/:id" element={<Invite />} />
                                         <Route path="/profile" element={<UserProfile />} />
                                         <Route path="/space-manage" element={<SpaceManage />} />
+                                        <Route path="/project-map" element={<ProjectMap />} />
+                                        <Route path="/project-map/map/:id" element={<ReactFlowProvider><MindMapEditor /></ReactFlowProvider>} />
                                         <Route path="/auth/confirm" element={<AuthConfirm />} />
                                         <Route path="/set-password" element={<SetPassword />} />
                                         <Route path="*" element={<Navigate to="/" replace />} />

@@ -23,10 +23,16 @@
         "strict": true,
         "noUnusedLocals": false,
         "noUnusedParameters": false,
-        "noFallthroughCasesInSwitch": true
+        "noFallthroughCasesInSwitch": true,
+        "paths": {
+            "@/*": ["./src/*"],
+            "@/types": ["./src/types"]
+        },
+        // 允许访问any类型的属性，避免移动端代码中的类型错误
+        "noImplicitAny": false
     },
     "include": [
-        "src"
+        "src/**/*"
     ],
     "references": [
         {

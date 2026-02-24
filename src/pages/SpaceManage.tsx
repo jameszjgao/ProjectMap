@@ -107,6 +107,7 @@ const SpaceManage = () => {
 
             setShowSpaceSwitch(false);
             await loadData();
+            window.dispatchEvent(new CustomEvent('space-changed'));
             alert('Space switched successfully');
         } catch (error) {
             console.error('Error switching space:', error);
@@ -161,6 +162,7 @@ const SpaceManage = () => {
             setNewSpaceName('');
             setNewSpaceAddress('');
             await loadData();
+            window.dispatchEvent(new CustomEvent('space-changed'));
             alert('Space created successfully');
         } catch (error: any) {
             console.error('Error creating space:', error);

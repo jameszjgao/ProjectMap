@@ -1,13 +1,11 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 
+// Strict Mode 关闭：React Flow 在双挂载下会触发 removeChild 报错，进入 Mind map 模块即崩溃
 try {
     ReactDOM.createRoot(document.getElementById('root')!).render(
-        <React.StrictMode>
-            <App />
-        </React.StrictMode>,
+        <App />,
     )
 } catch (error) {
     console.error('Render error:', error);

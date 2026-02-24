@@ -91,11 +91,39 @@
     font-weight: 600;
     color: var(--color-text-main);
     border: none;
-    border-bottom: 2px solid transparent;
+    border-bottom: 2px solid var(--color-border);
     border-radius: 0;
     background: transparent;
     padding: 0.25rem 0;
-    transition: bus all 0.2s;
+    transition: all 0.2s;
+}
+
+.store-name-input:focus {
+    outline: none;
+    border-bottom-color: var(--color-primary);
+}
+
+.field-readonly {
+    padding: 0.5rem 0;
+    font-size: 1rem;
+    color: var(--color-text-main);
+    min-height: 1.5rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid transparent;
+}
+
+.add-item-btn {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.items-table td span {
+    display: block;
+    padding: 0.5rem;
+    color: var(--color-text-main);
 }
 
 .store-name-input:focus {
