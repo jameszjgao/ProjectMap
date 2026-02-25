@@ -91,6 +91,76 @@
     gap: 0.75rem;
 }
 
+/* User row: logo 下方、团队上方，左侧用户信息 + 右侧邀请图标 */
+.sidebar-user-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.sidebar-user-info-inline {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--color-surface);
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-user-info-inline:hover {
+    background-color: var(--color-input-bg);
+    border-color: var(--color-primary);
+}
+
+.sidebar-invite-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-invite-btn:hover {
+    background: var(--color-input-bg);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.sidebar-invite-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.sidebar.collapsed .sidebar-user-row {
+    display: none;
+}
+
 /* Space Information - Top */
 .sidebar-space-info {
     padding: 0.75rem 1rem;
@@ -117,24 +187,7 @@
     gap: 1rem;
 }
 
-/* User Information - Bottom */
-.sidebar-user-info-bottom {
-    padding: 0.75rem 1rem;
-    background-color: var(--color-surface);
-    border-radius: 0.5rem;
-    border: 1px solid var(--color-border);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.sidebar-user-info-bottom:hover {
-    background-color: var(--color-input-bg);
-    border-color: var(--color-primary);
-}
-
-.sidebar.collapsed .sidebar-user-info-bottom {
-    display: none;
-}
+/* 底部区域保留占位以保持导航靠上（用户信息已移至 logo 下方） */
 
 .info-name-row {
     display: flex;
@@ -208,7 +261,7 @@
 }
 
 .sidebar-space-info:hover .info-manage-icon,
-.sidebar-user-info-bottom:hover .info-manage-icon {
+.sidebar-user-info-inline:hover .info-manage-icon {
     opacity: 1;
 }
 

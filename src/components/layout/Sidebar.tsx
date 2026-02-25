@@ -19,9 +19,12 @@ import {
   Users,
   Store,
   Package,
+  Bell,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentUserInfo, getCurrentSpaceInfo, UserInfo, SpaceInfo } from '../../lib/auth-helper';
+import { getPendingInvitationsForUser } from '../../lib/shared/space-invitations';
+import InvitationsPanel from '../InvitationsPanel';
 
 import './Sidebar.css';
 
@@ -61,6 +64,8 @@ const Sidebar = ({ user }: SidebarProps) => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [spaceInfo, setSpaceInfo] = useState<SpaceInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingInviteCount, setPendingInviteCount] = useState(0);
+  const [showInvitations, setShowInvitations] = useState(false);
 
   useEffect(() => {
     loadUserAndSpace();
@@ -75,6 +80,42 @@ const Sidebar = ({ user }: SidebarProps) => {
     window.addEventListener('space-changed', onSpaceChanged);
     return () => window.removeEventListener('space-changed', onSpaceChanged);
   }, []);
+
+  const fetchPendingInviteCount = async () => {
+    try {
+      const list = await getPendingInvitationsForUser();
+      setPendingInviteCount(list.length);
+    } catch {
+      setPendingInviteCount(0);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingInviteCount();
+  }, [userInfo?.id]);
+
+  useEffect(() => {
+    const userEmail = userInfo?.email?.toLowerCase();
+    if (!userEmail) return;
+    const channel = supabase
+      .channel('sidebar-invitations')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'space_invitations',
+          filter: `invitee_email=eq.${userEmail}`,
+        },
+        () => {
+          fetchPendingInviteCount();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userInfo?.email]);
 
   const loadUserAndSpace = async () => {
     try {
@@ -119,6 +160,47 @@ const Sidebar = ({ user }: SidebarProps) => {
           <img src="/logo.png" alt="Vouchap Logo" className="sidebar-logo-img" />
           {!collapsed && <span className="sidebar-logo-text">Vouchap</span>}
         </div>
+
+        {!collapsed && userInfo && (
+          <div className="sidebar-user-row">
+            <div className="sidebar-user-info-inline" onClick={handleUserClick}>
+              <div className="info-avatar user-avatar">
+                {userInfo.name ? (
+                  <span className="info-avatar-text">{userInfo.name.charAt(0).toUpperCase()}</span>
+                ) : (
+                  <User size={14} />
+                )}
+              </div>
+              <div className="info-content">
+                <span className="info-name" title={userInfo.email}>
+                  {userInfo.name || userInfo.email}
+                </span>
+                {userInfo.email && userInfo.name && (
+                  <span className="info-secondary" title={userInfo.email}>
+                    {userInfo.email}
+                  </span>
+                )}
+              </div>
+            </div>
+            <button
+              type="button"
+              className="sidebar-invite-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowInvitations(true);
+              }}
+              title="Invitations"
+              aria-label="Invitations"
+            >
+              <Bell size={18} />
+              {pendingInviteCount > 0 && (
+                <span className="sidebar-invite-badge">
+                  {pendingInviteCount > 99 ? '99+' : pendingInviteCount}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
 
         {!collapsed && spaceInfo && (
           <div className="sidebar-space-info" onClick={handleSpaceClick}>
@@ -188,34 +270,13 @@ const Sidebar = ({ user }: SidebarProps) => {
         )}
       </nav>
 
-      <div className="sidebar-bottom-section">
-        {!collapsed && userInfo && (
-          <div className="sidebar-user-info-bottom" onClick={handleUserClick}>
-            <div className="info-name-row">
-              <div className="info-avatar user-avatar">
-                {userInfo.name ? (
-                  <span className="info-avatar-text">
-                    {userInfo.name.charAt(0).toUpperCase()}
-                  </span>
-                ) : (
-                  <User size={14} />
-                )}
-              </div>
-              <div className="info-content">
-                <span className="info-name" title={userInfo.email}>
-                  {userInfo.name || userInfo.email}
-                </span>
-                {userInfo.email && userInfo.name && (
-                  <span className="info-secondary" title={userInfo.email}>
-                    {userInfo.email}
-                  </span>
-                )}
-              </div>
-              <Settings size={16} className="info-manage-icon" />
-            </div>
-          </div>
-        )}
-      </div>
+      <div className="sidebar-bottom-section" aria-hidden="true" />
+
+      <InvitationsPanel
+        open={showInvitations}
+        onClose={() => setShowInvitations(false)}
+        onAccepted={() => fetchPendingInviteCount()}
+      />
     </div>
   );
 };

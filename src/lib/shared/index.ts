@@ -18,3 +18,4 @@ export * from './skus';
 export * from './suppliers';
 export * from './warehouse';
 export * from './space-members';
+export * from './space-invitations';
